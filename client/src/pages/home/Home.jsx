@@ -16,7 +16,8 @@ const Home = () => {
     const fetchData = async () => {
       try {
         const res = await axios.get(`http://localhost:5000/api/device`);
-        setData(res.data);
+        const filterData = res.data.filter((item) => item.location);
+        setData(filterData);
         setLoading(false);
       } catch (err) {
         setError(err);
@@ -51,7 +52,7 @@ const Home = () => {
   }
   const getLines = () => {
     const aPin = data.find((item) => item.type === "Tag");
-    if (!aPin) return null;
+    if (!aPin || !aPin.location) return null;
 
     return data
       .filter((item) => item.type !== "Tag")

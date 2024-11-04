@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import "./devices.scss";
 import DataTable from "../../components/dataTable/DataTable";
-import Add from "../../components/add/Add";
 import { GridColDef } from "@mui/x-data-grid";
+import Modal from "react-modal";
 import React from "react";
 import axios from "axios";
+import * as actions from "../../redux/actions";
+import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 
 const columns: GridColDef[] = [
   { field: "_id", headerName: "ID", width: 250 },
@@ -37,28 +40,82 @@ const columns: GridColDef[] = [
     headerName: "Device status",
     width: 120,
     type: "string",
-  }
+  },
 ];
 
+const customStyles = {
+  content: {
+    top: "50%",
+    left: "50%",
+    right: "auto",
+    bottom: "auto",
+    marginRight: "-50%",
+    transform: "translate(-50%, -50%)",
+  },
+};
+
+interface Device {
+  _id: string;
+  address: string;
+  location: Object;
+  name: string;
+  operation: string;
+  status: string;
+  type: string;
+}
+
 const Devices = () => {
+  const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
-  const [data, setData] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-  // const [track, setTrack] = useState(false);
+  const [data, setData] = useState<Device[]>([]);
+
+  const closeModal = () => {
+    setOpen(false);
+  };
 
   useEffect(() => {
+    dispatch(actions.controlLoading(true));
     const fetchData = async () => {
       try {
         const res = await axios.get(`http://localhost:5000/api/device`);
         setData(res.data);
+        console.log(res.data);
+        dispatch(actions.controlLoading(false));
       } catch (err) {
-        console.log(err)
+        dispatch(actions.controlLoading(false));
+        console.log(err);
       }
     };
 
     fetchData();
   }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const inputs = Object.fromEntries(formData);
+    dispatch(actions.controlLoading(true));
+    try {
+      const newDevice = await axios.post(
+        `http://localhost:5000/api/device`,
+        inputs
+      );
+      setData([...data, newDevice.data]);
+      dispatch(actions.controlLoading(false));
+
+      toast.success("Device has been added successfully", {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      // window.location.reload();
+      setTimeout(() => {
+        closeModal();
+      }, 3000);
+    } catch (error) {
+      dispatch(actions.controlLoading(false));
+      console.log(error);
+    }
+  };
   // TEST THE API
 
   // const { isLoading, data } = useQuery({
@@ -83,7 +140,39 @@ const Devices = () => {
       ) : (
         <DataTable slug="products" columns={columns} rows={data} />
       )} */}
-      {open && <Add slug="product" columns={columns} setOpen={setOpen} />}
+      {/* {open && <Add slug="product" columns={columns} setOpen={setOpen} />} */}
+      <Modal
+        isOpen={open}
+        onRequestClose={closeModal}
+        contentLabel="Update Modal"
+        style={customStyles}
+      >
+        <div className="updateModal">
+          <h1>Add new device</h1>
+          <div className="form-update">
+            <span className="close" onClick={closeModal}>
+              X
+            </span>
+            <form onSubmit={handleSubmit}>
+              {columns
+                .filter((item) => item.field !== "_id")
+                .map((column) => (
+                  <div className="item">
+                    <label>{column.headerName}</label>
+                    <input
+                      type={column.type}
+                      id={column.field}
+                      name={column.field}
+                      placeholder={`Enter ${column.field}`}
+                    />
+                  </div>
+                ))}
+              <button>Send</button>
+            </form>
+            {/* <button onClick={closeModal}>Close</button> */}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
