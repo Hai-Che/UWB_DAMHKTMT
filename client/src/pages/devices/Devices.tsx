@@ -68,6 +68,7 @@ const Devices = () => {
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<Device[]>([]);
+  const [refresh, setRefresh] = useState(false);
 
   const closeModal = () => {
     setOpen(false);
@@ -88,7 +89,7 @@ const Devices = () => {
     };
 
     fetchData();
-  }, []);
+  }, [refresh]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -96,18 +97,14 @@ const Devices = () => {
     const inputs = Object.fromEntries(formData);
     dispatch(actions.controlLoading(true));
     try {
-      const newDevice = await axios.post(
-        `http://localhost:5000/api/device`,
-        inputs
-      );
-      setData([...data, newDevice.data]);
+      await axios.post(`http://localhost:5000/api/device`, inputs);
+      setRefresh(!refresh);
       dispatch(actions.controlLoading(false));
 
       toast.success("Device has been added successfully", {
         position: "top-center",
         autoClose: 2000,
       });
-      // window.location.reload();
       setTimeout(() => {
         closeModal();
       }, 3000);
@@ -116,15 +113,6 @@ const Devices = () => {
       console.log(error);
     }
   };
-  // TEST THE API
-
-  // const { isLoading, data } = useQuery({
-  //   queryKey: ["allproducts"],
-  //   queryFn: () =>
-  //     fetch("http://localhost:8800/api/products").then(
-  //       (res) => res.json()
-  //     ),
-  // });
 
   return (
     <div className="products">
@@ -133,14 +121,6 @@ const Devices = () => {
         <button onClick={() => setOpen(true)}>Add New Devices</button>
       </div>
       <DataTable slug="products" columns={columns} rows={data} />
-      {/* TEST THE API */}
-
-      {/* {isLoading ? (
-        "Loading..."
-      ) : (
-        <DataTable slug="products" columns={columns} rows={data} />
-      )} */}
-      {/* {open && <Add slug="product" columns={columns} setOpen={setOpen} />} */}
       <Modal
         isOpen={open}
         onRequestClose={closeModal}

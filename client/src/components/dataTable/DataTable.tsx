@@ -69,6 +69,7 @@ const DataTable = (props: Props) => {
         autoClose: 2000,
       });
       setData((prevData) => prevData.filter((item) => item.name !== name));
+      console.log(data);
     } catch (error) {
       dispatch(actions.controlLoading(false));
       console.log(error);
