@@ -10,6 +10,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";
 import { ScaleLoader } from "react-spinners";
 import { useSelector } from "react-redux";
+import ThreeDRenderer from "./pages/threeTest/threeTest";
 
 const override = {
   position: "absolute",
@@ -62,6 +63,10 @@ function App() {
         {
           path: "/devices",
           element: <Devices />,
+        },
+        {
+          path: "/threeTest",
+          element: <ThreeDRenderer />,
         },
       ],
     },

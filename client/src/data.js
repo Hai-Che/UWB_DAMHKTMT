@@ -15,6 +15,12 @@ export const menu = [
         url: "/devices",
         icon: "element.svg",
       },
+      {
+        id: 3,
+        title: "Test3D",
+        url: "/threeTest",
+        icon: "note.svg",
+      },
     ],
   },
   // {
