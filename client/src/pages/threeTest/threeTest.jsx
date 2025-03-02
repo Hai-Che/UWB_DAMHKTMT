@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-
+import "./threeTest.scss";
 const ThreeDRenderer = () => {
   const mountRef = useRef(null);
   const [track, setTrack] = useState(false);
@@ -28,15 +28,10 @@ const ThreeDRenderer = () => {
       boxHeight = 200,
       boxDepth = 200;
     const boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
-    // const boxMaterial = new THREE.MeshBasicMaterial({
-    //   color: 0xffffff,
-    //   wireframe: true,
-    // });
-    // const box = new THREE.Mesh(boxGeometry, boxMaterial);
-    // scene.add(box);
     const edges = new THREE.EdgesGeometry(boxGeometry);
     const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
     const boxEdges = new THREE.LineSegments(edges, lineMaterial);
+
     scene.add(boxEdges);
 
     // Sample locations
@@ -125,9 +120,12 @@ const ThreeDRenderer = () => {
         <div className="map">
           <div
             ref={mountRef}
-            style={{ width: "50%", height: "100vh", position: "absolute" }}
+            style={{
+              width: "100%",
+              height: "100vh",
+              position: "absolute",
+            }}
           />
-          ;
         </div>
         <div className="info">
           <h1>Tracking info</h1>

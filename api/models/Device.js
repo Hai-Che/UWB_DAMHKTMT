@@ -1,34 +1,44 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const DeviceSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: true
     },
-    address: {
+    macAddress: {
       type: String,
-      required: true,
+      required: true
     },
     type: {
       type: String,
-      required: true,
-      default: "Anchor",
-      enum: ["Anchor", "Tag"],
+      default: 'Anchor',
+      enum: ['Anchor', 'Tag']
     },
     location: {
       x: Number,
       y: Number,
-      z: Number,
+      z: Number
     },
-    operation: String,
+    operationMode: String,
     status: {
       type: String,
-      default: "available",
-      enum: ["available", "connect"],
+      default: 'active',
+      enum: ['off', 'passive', 'active']
     },
+    ledStatus: {
+      type: Boolean,
+      default: false
+    },
+    isInitiator: {
+      type: Boolean,
+      default: false
+    },
+    nodeId: {
+      type: String
+    }
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Device", DeviceSchema);
+export default mongoose.model('Device', DeviceSchema);

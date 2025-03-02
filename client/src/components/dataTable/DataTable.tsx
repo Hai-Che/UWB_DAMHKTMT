@@ -1,12 +1,12 @@
-import { DataGrid, GridColDef, GridToolbar } from "@mui/x-data-grid";
-import "./dataTable.scss";
+import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
+import './dataTable.scss';
 // import { Link } from "react-router-dom";
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import Modal from "react-modal";
-import * as actions from "../../redux/actions";
-import { useDispatch } from "react-redux";
-import { toast } from "react-toastify";
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import Modal from 'react-modal';
+import * as actions from '../../redux/actions';
+import { useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
 
 type Props = {
   columns: GridColDef[];
@@ -17,23 +17,25 @@ type Props = {
 
 interface Device {
   _id: string;
-  address: string;
+  macAddress: string;
   location: Object;
   name: string;
-  operation: string;
+  operationMode: string;
   status: string;
   type: string;
+  ledStatus: boolean;
+  isInitiator: boolean;
 }
 
 const customStyles = {
   content: {
-    top: "50%",
-    left: "50%",
-    right: "auto",
-    bottom: "auto",
-    marginRight: "-50%",
-    transform: "translate(-50%, -50%)",
-  },
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)'
+  }
 };
 
 const DataTable = (props: Props) => {
@@ -59,16 +61,16 @@ const DataTable = (props: Props) => {
     setData(props.rows);
   }, [props.rows]);
 
-  const handleDelete = async (name: string) => {
+  const handleDelete = async (macAddress: string) => {
     dispatch(actions.controlLoading(true));
     try {
-      await axios.delete(`http://localhost:5000/api/device/${name}`);
+      await axios.delete(`http://localhost:5000/api/device/${macAddress}`);
       dispatch(actions.controlLoading(false));
-      toast.success("Device has been deleted successfully", {
-        position: "top-center",
-        autoClose: 2000,
+      toast.success('Device has been deleted successfully', {
+        position: 'top-center',
+        autoClose: 2000
       });
-      setData((prevData) => prevData.filter((item) => item.name !== name));
+      setData((prevData) => prevData.filter((item) => item.macAddress !== macAddress));
       console.log(data);
     } catch (error) {
       dispatch(actions.controlLoading(false));
@@ -84,16 +86,12 @@ const DataTable = (props: Props) => {
     try {
       const res = await axios.put(`http://localhost:5000/api/device`, inputs);
       dispatch(actions.controlLoading(false));
-      toast.success("Device has been updated successfully", {
-        position: "top-center",
-        autoClose: 2000,
+      toast.success('Device has been updated successfully', {
+        position: 'top-center',
+        autoClose: 2000
       });
-      setData((prevData) =>
-        prevData.map((item) => (item._id === res.data._id ? res.data : item))
-      );
-      setTimeout(() => {
-        closeModal();
-      }, 3000);
+      setData((prevData) => prevData.map((item) => (item._id === res.data._id ? res.data : item)));
+      closeModal();
     } catch (error) {
       dispatch(actions.controlLoading(false));
       console.log(error);
@@ -110,8 +108,8 @@ const DataTable = (props: Props) => {
   };
 
   const actionColumn: GridColDef = {
-    field: "action",
-    headerName: "Action",
+    field: 'action',
+    headerName: 'Action',
     width: 100,
     renderCell: (params) => {
       return (
@@ -121,12 +119,12 @@ const DataTable = (props: Props) => {
             <img src="/view.svg" alt="" />
           </div>
           {/* </Link> */}
-          <div className="delete" onClick={() => handleDelete(params.row.name)}>
+          <div className="delete" onClick={() => handleDelete(params.row.macAddress)}>
             <img src="/delete.svg" alt="" />
           </div>
         </div>
       );
-    },
+    }
   };
 
   return (
@@ -140,16 +138,16 @@ const DataTable = (props: Props) => {
           initialState={{
             pagination: {
               paginationModel: {
-                pageSize: 10,
-              },
-            },
+                pageSize: 10
+              }
+            }
           }}
           slots={{ toolbar: GridToolbar }}
           slotProps={{
             toolbar: {
               showQuickFilter: true,
-              quickFilterProps: { debounceMs: 500 },
-            },
+              quickFilterProps: { debounceMs: 500 }
+            }
           }}
           pageSizeOptions={[5]}
           checkboxSelection
@@ -158,12 +156,7 @@ const DataTable = (props: Props) => {
           disableDensitySelector
           disableColumnSelector
         />
-        <Modal
-          isOpen={modalIsOpen}
-          onRequestClose={closeModal}
-          contentLabel="Update Modal"
-          style={customStyles}
-        >
+        <Modal isOpen={modalIsOpen} onRequestClose={closeModal} contentLabel="Update Modal" style={customStyles}>
           <div className="updateModal">
             <h1>Update Device</h1>
             {selectedRow && (
@@ -173,24 +166,44 @@ const DataTable = (props: Props) => {
                 </span>
                 <form onSubmit={handleSubmit}>
                   {props.columns
-                    .filter((item) => item.field !== "_id")
+                    .filter((item) => item.field !== '_id' && item.field !== 'operationMode')
                     .map((column) => (
-                      <div className="item">
+                      // <div className="item">
+                      //   <label>{column.headerName}</label>
+                      //   <input
+                      //     type={column.type}
+                      //     id={column.field}
+                      //     name={column.field}
+                      //     placeholder={selectedRow[column.field]}
+                      //   />
+                      // </div>
+                      <div className="item" key={column.field}>
                         <label>{column.headerName}</label>
-                        <input
-                          type={column.type}
-                          id={column.field}
-                          name={column.field}
-                          placeholder={selectedRow[column.field]}
-                        />
+                        {column.type === 'boolean' ? (
+                          <select id={column.field} name={column.field}>
+                            <option value="">Default</option>
+                            <option value="false">False</option>
+                            <option value="true">True</option>
+                          </select>
+                        ) : column.field === 'type' ? (
+                          <select id={column.field} name={column.field}>
+                            <option value="">Default</option>
+                            <option value="Anchor">Anchor</option>
+                            <option value="Tag">Tag</option>
+                          </select>
+                        ) : column.field === 'status' ? (
+                          <select id={column.field} name={column.field}>
+                            <option value="">Default</option>
+                            <option value="active">Active</option>
+                            <option value="passive">Passive</option>
+                            <option value="off">Off</option>
+                          </select>
+                        ) : (
+                          <input type={column.type} id={column.field} name={column.field} placeholder={`Enter ${column.field}`} />
+                        )}
                       </div>
                     ))}
-                  <input
-                    type="hidden"
-                    id="_id"
-                    name="_id"
-                    value={selectedRow["_id"]}
-                  ></input>
+                  <input type="hidden" id="_id" name="_id" value={selectedRow['_id']}></input>
                   <button>Send</button>
                 </form>
                 {/* <button onClick={closeModal}>Close</button> */}

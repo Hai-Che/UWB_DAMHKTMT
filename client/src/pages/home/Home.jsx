@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
-import { MdLocationPin } from "react-icons/md";
-import "./home.scss";
-import axios from "axios";
-import io from "socket.io-client";
+import { useState, useEffect } from 'react';
+import { MdLocationPin } from 'react-icons/md';
+import './home.scss';
+import axios from 'axios';
+import io from 'socket.io-client';
 
-const socket = io("http://localhost:5000");
+const socket = io('http://localhost:5000');
 
 const Home = () => {
   const [data, setData] = useState([]);
@@ -13,6 +13,7 @@ const Home = () => {
   const [track, setTrack] = useState(false);
 
   useEffect(() => {
+    let updateTimeout;
     const fetchData = async () => {
       try {
         const res = await axios.get(`http://localhost:5000/api/device`);
@@ -28,20 +29,37 @@ const Home = () => {
     fetchData();
 
     if (data.length > 0 && track) {
-      socket.on("updateData", (newData) => {
-        const updatedData = data.map((item) =>
-          item.name === newData.name
-            ? { ...item, location: newData.location }
-            : item
-        );
+      socket.on('updateData', (transferData) => {
+        clearTimeout(updateTimeout);
+        const updatedData = data.map((item) => (item.name === 'DWCE07' ? { ...item, location: transferData.location } : item));
         setData(updatedData);
+
+        updateTimeout = setTimeout(() => {
+          const dwce07Data = updatedData.find((item) => item.name === 'DWCE07');
+          if (dwce07Data) {
+            updateDeviceInDB(dwce07Data);
+          }
+        }, 5 * 1000); // 5 giây
       });
     }
 
     return () => {
-      socket.off("updateData");
+      socket.off('updateData');
+      clearTimeout(updateTimeout);
     };
   }, [track]);
+
+  const updateDeviceInDB = async (device) => {
+    try {
+      const response = await axios.put(`http://localhost:5000/api/device/location`, { location: device.location, macAddress: device.macAddress });
+
+      if (response.status === 200) {
+        console.log('Cập nhật database thành công:', device);
+      }
+    } catch (error) {
+      console.error('Lỗi cập nhật database:', error);
+    }
+  };
 
   if (loading) {
     return <div className="home">Loading...</div>;
@@ -51,41 +69,25 @@ const Home = () => {
     return <div className="home">Error: {error.message}</div>;
   }
   const getLines = () => {
-    const aPin = data.find((item) => item.type === "Tag");
+    const aPin = data.find((item) => item.type === 'Tag');
     if (!aPin || !aPin.location) return null;
 
     return data
-      .filter((item) => item.type !== "Tag")
+      .filter((item) => item.type !== 'Tag')
       .map((item, index) => {
-        const x1 = aPin.location.x;
-        const y1 = aPin.location.y;
-        const x2 = item.location.x;
-        const y2 = item.location.y;
+        const x1 = Math.round(aPin.location.x * 100);
+        const y1 = Math.round(aPin.location.y * 100);
+        const x2 = Math.round(item.location.x * 100);
+        const y2 = Math.round(item.location.y * 100);
         const midX = (x1 + x2) / 2;
         const midY = (y1 + y2) / 2;
         const distance = calculateDistance(x1, y1, x2, y2);
 
         return (
           <g key={index}>
-            <line
-              x1={x1}
-              y1={y1}
-              x2={x2}
-              y2={y2}
-              stroke="white"
-              strokeDasharray="5,5"
-              strokeWidth="2"
-            />
-            <text
-              x={midX}
-              y={midY}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill="white"
-              fontSize="10"
-              style={{ marginLeft: "10px" }}
-            >
-              {distance}
+            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="white" strokeDasharray="5,5" strokeWidth="2" />
+            <text x={midX} y={midY} textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="10" style={{ marginLeft: '10px' }}>
+              {Math.round((distance / 100) * 100) / 100}
             </text>
           </g>
         );
@@ -97,18 +99,14 @@ const Home = () => {
   };
 
   const getDistance = (x, y) => {
-    const aPin = data.find((item) => item.type === "Tag");
+    const aPin = data.find((item) => item.type === 'Tag');
     if (!aPin) return null;
-    return Math.sqrt(
-      Math.pow(aPin.location.x - x, 2) + Math.pow(aPin.location.y - y, 2)
-    ).toFixed(2);
+    return Math.sqrt(Math.pow(aPin.location.x - x, 2) + Math.pow(aPin.location.y - y, 2)).toFixed(2);
   };
 
   return (
     <div className="home">
-      <div className="home-title">
-        {track ? <span>Is tracking</span> : <span>Switch to track</span>}
-      </div>
+      <div className="home-title">{track ? <span>Is tracking</span> : <span>Switch to track</span>}</div>
       <div className="home-control">
         <label className="switch">
           <input
@@ -129,16 +127,12 @@ const Home = () => {
               key={index}
               className="map-item"
               style={{
-                position: "absolute",
-                left: `${item.location.x}px`,
-                top: `${item.location.y}px`,
+                position: 'absolute',
+                left: `${item.location.x * 100}px`,
+                top: `${item.location.y * 100}px`
               }}
             >
-              <MdLocationPin
-                className="pin"
-                style={{ color: item.type === `Tag` ? `green` : `red` }}
-                size={30}
-              />
+              <MdLocationPin className="pin" style={{ color: item.type === `Tag` ? `green` : `red` }} size={30} />
               <p className="map-item-detail">{item.name}</p>
               <p className="map-item-detail">{item.type}</p>
               <p className="map-item-detail">

@@ -5,24 +5,24 @@ export const menu = [
     listItems: [
       {
         id: 1,
-        title: "Homepage",
-        url: "/",
-        icon: "home.svg",
+        title: 'Homepage',
+        url: '/',
+        icon: 'home.svg'
       },
       {
         id: 2,
-        title: "Devices",
-        url: "/devices",
-        icon: "element.svg",
-      },
-      {
-        id: 3,
-        title: "Test3D",
-        url: "/threeTest",
-        icon: "note.svg",
-      },
-    ],
-  },
+        title: 'Devices',
+        url: '/devices',
+        icon: 'element.svg'
+      }
+      // {
+      //   id: 3,
+      //   title: "Test3D",
+      //   url: "/threeTest",
+      //   icon: "note.svg",
+      // },
+    ]
+  }
   // {
   //   id: 2,
   //   title: "lists",
@@ -124,11 +124,11 @@ export const menu = [
 export const products = [
   {
     id: 1,
-    name: "DW1",
-    address: "address1",
-    type: "Anchor",
-    operation: "opration1",
-    status: "Available",
-    inStock: true,
-  },
+    name: 'DW1',
+    address: 'address1',
+    type: 'Anchor',
+    operation: 'opration1',
+    status: 'Available',
+    inStock: true
+  }
 ];

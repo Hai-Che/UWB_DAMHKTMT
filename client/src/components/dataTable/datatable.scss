@@ -1,4 +1,4 @@
-@import "../../styles/variables.scss";
+@import '../../styles/variables.scss';
 
 .dataTable {
   .dataGrid {
@@ -70,6 +70,19 @@
         outline: none;
         border: 1px solid $soft-color;
         border-radius: 3px;
+      }
+      select {
+        padding: 10px;
+        background-color: transparent;
+        color: white;
+        outline: none;
+        border: 1px solid $soft-color;
+        border-radius: 3px;
+        appearance: none;
+
+        option {
+          color: black;
+        }
       }
     }
     button {

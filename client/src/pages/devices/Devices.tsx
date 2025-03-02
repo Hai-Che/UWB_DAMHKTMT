@@ -1,67 +1,81 @@
-import { useEffect, useState } from "react";
-import "./devices.scss";
-import DataTable from "../../components/dataTable/DataTable";
-import { GridColDef } from "@mui/x-data-grid";
-import Modal from "react-modal";
-import React from "react";
-import axios from "axios";
-import * as actions from "../../redux/actions";
-import { useDispatch } from "react-redux";
-import { toast } from "react-toastify";
+import { useEffect, useState } from 'react';
+import './devices.scss';
+import DataTable from '../../components/dataTable/DataTable';
+import { GridColDef } from '@mui/x-data-grid';
+import Modal from 'react-modal';
+import React from 'react';
+import axios from 'axios';
+import * as actions from '../../redux/actions';
+import { useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
 
 const columns: GridColDef[] = [
-  { field: "_id", headerName: "ID", width: 250 },
+  { field: '_id', headerName: 'ID', width: 220 },
   {
-    field: "name",
-    type: "string",
-    headerName: "Device name",
-    width: 100,
+    field: 'name',
+    type: 'string',
+    headerName: 'Name',
+    width: 80
   },
   {
-    field: "type",
-    headerName: "Device type",
-    width: 100,
-    type: "string",
+    field: 'type',
+    headerName: 'Type',
+    width: 70,
+    type: 'string'
   },
   {
-    field: "address",
-    headerName: "Device address",
+    field: 'macAddress',
+    headerName: 'Mac address',
     width: 150,
-    type: "string",
+    type: 'string'
   },
   {
-    field: "operation",
-    headerName: "Device operation",
-    width: 150,
-    type: "string",
+    field: 'operationMode',
+    headerName: 'Device operation mode',
+    width: 160,
+    type: 'string'
   },
   {
-    field: "status",
-    headerName: "Device status",
-    width: 120,
-    type: "string",
+    field: 'status',
+    headerName: 'Status',
+    width: 70,
+    type: 'string'
   },
+  {
+    field: 'ledStatus',
+    headerName: 'Led',
+    width: 70,
+    type: 'boolean'
+  },
+  {
+    field: 'isInitiator',
+    headerName: 'Initiator',
+    width: 70,
+    type: 'boolean'
+  }
 ];
 
 const customStyles = {
   content: {
-    top: "50%",
-    left: "50%",
-    right: "auto",
-    bottom: "auto",
-    marginRight: "-50%",
-    transform: "translate(-50%, -50%)",
-  },
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)'
+  }
 };
 
 interface Device {
   _id: string;
-  address: string;
+  macAddress: string;
   location: Object;
   name: string;
-  operation: string;
+  operationMode: string;
   status: string;
   type: string;
+  ledStatus: boolean;
+  isInitiator: boolean;
 }
 
 const Devices = () => {
@@ -101,9 +115,9 @@ const Devices = () => {
       setRefresh(!refresh);
       dispatch(actions.controlLoading(false));
 
-      toast.success("Device has been added successfully", {
-        position: "top-center",
-        autoClose: 2000,
+      toast.success('Device has been added successfully', {
+        position: 'top-center',
+        autoClose: 2000
       });
       setTimeout(() => {
         closeModal();
@@ -135,16 +149,34 @@ const Devices = () => {
             </span>
             <form onSubmit={handleSubmit}>
               {columns
-                .filter((item) => item.field !== "_id")
+                .filter((item) => item.field !== '_id')
                 .map((column) => (
-                  <div className="item">
+                  <div className="item" key={column.field}>
                     <label>{column.headerName}</label>
-                    <input
-                      type={column.type}
-                      id={column.field}
-                      name={column.field}
-                      placeholder={`Enter ${column.field}`}
-                    />
+                    {column.type === 'boolean' ? (
+                      <select id={column.field} name={column.field}>
+                        <option value="false">False</option>
+                        <option value="true">True</option>
+                      </select>
+                    ) : column.field === 'type' ? (
+                      <select id={column.field} name={column.field}>
+                        <option value="Anchor">Anchor</option>
+                        <option value="Tag">Tag</option>
+                      </select>
+                    ) : column.field === 'status' ? (
+                      <select id={column.field} name={column.field}>
+                        <option value="active">Active</option>
+                        <option value="passive">Passive</option>
+                        <option value="off">Off</option>
+                      </select>
+                    ) : (
+                      <input
+                        type={column.type}
+                        id={column.field}
+                        name={column.field}
+                        placeholder={`Enter ${column.field}`}
+                      />
+                    )}
                   </div>
                 ))}
               <button>Send</button>

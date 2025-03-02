@@ -1,7 +1,7 @@
-import { GridColDef } from "@mui/x-data-grid";
-import "./add.scss";
-import React from "react";
-import axios from "axios";
+import { GridColDef } from '@mui/x-data-grid';
+import './add.scss';
+import React from 'react';
+import axios from 'axios';
 // import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type Props = {
@@ -62,16 +62,11 @@ const Add = (props: Props) => {
         <h1>Add new {props.slug}</h1>
         <form onSubmit={handleSubmit}>
           {props.columns
-            .filter((item) => item.field !== "_id" && item.field !== "status")
+            .filter((item) => item.field !== '_id' && item.field !== 'status')
             .map((column) => (
               <div className="item">
                 <label>{column.headerName}</label>
-                <input
-                  type={column.type}
-                  id={column.field}
-                  name={column.field}
-                  placeholder={column.field}
-                />
+                <input type={column.type} id={column.field} name={column.field} placeholder={column.field} />
               </div>
             ))}
           <button>Send</button>
