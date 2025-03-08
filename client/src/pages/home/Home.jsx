@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MdLocationPin } from 'react-icons/md';
 import './home.scss';
 import axios from 'axios';
@@ -11,41 +11,46 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [track, setTrack] = useState(false);
+  const latestDataRef = useRef([]);
 
+  const fetchData = async () => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/device`);
+      const filterData = res.data.filter((item) => item.location);
+      setData(filterData);
+      console.log(filterData);
+      latestDataRef.current = filterData;
+      setLoading(false);
+    } catch (err) {
+      setError(err);
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    let updateTimeout;
-    const fetchData = async () => {
-      try {
-        const res = await axios.get(`http://localhost:5000/api/device`);
-        const filterData = res.data.filter((item) => item.location);
-        setData(filterData);
-        setLoading(false);
-      } catch (err) {
-        setError(err);
-        setLoading(false);
-      }
-    };
-
     fetchData();
+
+    if (track) {
+      socket.emit('enable_tracking');
+    } else {
+      socket.emit('disable_tracking');
+    }
 
     if (data.length > 0 && track) {
       socket.on('updateData', (transferData) => {
-        clearTimeout(updateTimeout);
         const updatedData = data.map((item) => (item.name === 'DWCE07' ? { ...item, location: transferData.location } : item));
         setData(updatedData);
-
-        updateTimeout = setTimeout(() => {
-          const dwce07Data = updatedData.find((item) => item.name === 'DWCE07');
-          if (dwce07Data) {
-            updateDeviceInDB(dwce07Data);
-          }
-        }, 5 * 1000); // 5 giây
+        latestDataRef.current = updatedData;
       });
     }
 
     return () => {
       socket.off('updateData');
-      clearTimeout(updateTimeout);
+      if (track) {
+        const dwce07Data = latestDataRef.current.find((item) => item.name === 'DWCE07');
+        if (dwce07Data) {
+          updateDeviceInDB(dwce07Data);
+        }
+      }
     };
   }, [track]);
 
@@ -55,6 +60,7 @@ const Home = () => {
 
       if (response.status === 200) {
         console.log('Cập nhật database thành công:', device);
+        fetchData();
       }
     } catch (error) {
       console.error('Lỗi cập nhật database:', error);
@@ -69,10 +75,10 @@ const Home = () => {
     return <div className="home">Error: {error.message}</div>;
   }
   const getLines = () => {
-    const aPin = data.find((item) => item.type === 'Tag');
+    const aPin = latestDataRef.current.find((item) => item.type === 'Tag');
     if (!aPin || !aPin.location) return null;
 
-    return data
+    return latestDataRef.current
       .filter((item) => item.type !== 'Tag')
       .map((item, index) => {
         const x1 = Math.round(aPin.location.x * 100);
@@ -99,7 +105,7 @@ const Home = () => {
   };
 
   const getDistance = (x, y) => {
-    const aPin = data.find((item) => item.type === 'Tag');
+    const aPin = latestDataRef.current.find((item) => item.type === 'Tag');
     if (!aPin) return null;
     return Math.sqrt(Math.pow(aPin.location.x - x, 2) + Math.pow(aPin.location.y - y, 2)).toFixed(2);
   };
@@ -122,7 +128,7 @@ const Home = () => {
       <div className="home-container">
         <div className="map">
           <svg className="map-svg">{getLines()}</svg>
-          {data.map((item, index) => (
+          {latestDataRef.current.map((item, index) => (
             <div
               key={index}
               className="map-item"
@@ -142,9 +148,9 @@ const Home = () => {
           ))}
         </div>
         <div className="info">
-          <h1>Tracking info</h1>
+          <h2>Tracking info</h2>
           <div className="list">
-            {data.map((item, index) => (
+            {latestDataRef.current.map((item, index) => (
               <div key={index} className="list-item">
                 <div className="info-item-detail">
                   <span>{item.name}</span>
@@ -161,6 +167,25 @@ const Home = () => {
               </div>
             ))}
           </div>
+          {/* <h2>Info send by tag</h2>
+          <div className="list">
+            {latestDataRef.current.map((item, index) => (
+              <div key={index} className="list-item">
+                <div className="info-item-detail">
+                  <span>{item.name}</span>
+                  <span>{item.type}</span>
+                </div>
+                <div className="info-item-detail">
+                  <span>x:{item.location.x}</span>
+                  <span>y:{item.location.y}</span>
+                </div>
+                <div className="info-item-detail">
+                  <span>Distance:</span>
+                  <span>{getDistance(item.location.x, item.location.y)}</span>
+                </div>
+              </div>
+            ))}
+          </div> */}
         </div>
       </div>
     </div>

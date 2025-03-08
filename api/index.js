@@ -17,7 +17,7 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 mongoose
-  .connect(process.env.URL_DB)
+  .connect('mongodb://127.0.0.1:27017/uwb')
   .then(() => {
     console.log('Connect database successfully');
   })
@@ -66,6 +66,16 @@ io.on('connection', (socket) => {
       }
     };
     io.emit('updateData', transferData);
+  });
+
+  socket.on('enable_tracking', () => {
+    io.emit('start_tracking');
+    console.log('Bắt đầu tracking!');
+  });
+
+  socket.on('disable_tracking', () => {
+    io.emit('stop_tracking');
+    console.log('Dừng tracking!');
   });
 
   socket.on('disconnect', () => {

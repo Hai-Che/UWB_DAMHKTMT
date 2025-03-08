@@ -1,6 +1,6 @@
 import asyncio
 import struct
-import websockets
+# import websockets
 from bleak import BleakScanner, BleakClient
 
 SERVER_WS_URL = "ws://10.20.1.146:5000/api/test"  # Địa chỉ server WebSocket
@@ -50,16 +50,17 @@ def decode_raw_data(data):
 
 async def read_characteristic_data(client):
     """Đọc dữ liệu từ DWM1001C và gửi đến server."""
-    while True:
-        try:
-            data = await client.read_gatt_char(CHARACTERISTIC_UUID)
-            decoded_data = decode_raw_data(data)
-            if decoded_data:
-                print(f"Decoded Data: {decoded_data}")
-                await send_data_to_server(str(decoded_data))  # Gửi dữ liệu qua WebSocket
-        except Exception as e:
-            print(f"Read failed: {e}")
-        await asyncio.sleep(1)  # Đọc dữ liệu mỗi giây
+    print(f"Connect successfully")
+    # while True:
+    #     try:
+    #         data = await client.read_gatt_char(CHARACTERISTIC_UUID)
+    #         decoded_data = decode_raw_data(data)
+    #         if decoded_data:
+    #             print(f"Decoded Data: {decoded_data}")
+    #             await send_data_to_server(str(decoded_data))  # Gửi dữ liệu qua WebSocket
+    #     except Exception as e:
+    #         print(f"Read failed: {e}")
+    #     await asyncio.sleep(1)  # Đọc dữ liệu mỗi giây
 
 async def process_device(device):
     """Kết nối với thiết bị BLE và liên tục đọc dữ liệu."""

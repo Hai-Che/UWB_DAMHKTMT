@@ -25,10 +25,15 @@ export const updateDevice = async (req, res) => {
     const filtered = othersArray.filter(([key, value]) => value !== '');
     const filteredOthers = Object.fromEntries(filtered);
     const findDevice = await Device.findById(_id);
+    if (Object.keys(filteredOthers).length === 0) {
+      return res.status(200).json('Không có field cập nhật');
+    }
     let operationMode = findDevice.operationMode;
     if (filteredOthers.hasOwnProperty('ledStatus') && filteredOthers.ledStatus !== findDevice.ledStatus.toString()) {
+      console.log('go here');
       const ledBit = findDevice.ledStatus ? '0' : '1';
       operationMode = operationMode.substring(0, 5) + ledBit + operationMode.substring(6);
+      io.emit('updateOperationMode', { macAddress: findDevice.macAddress, operationMode });
     }
     if (filteredOthers.ledStatus) {
       filteredOthers.ledStatus = filteredOthers.ledStatus === 'true';
@@ -36,9 +41,10 @@ export const updateDevice = async (req, res) => {
     if (filteredOthers.isInitiator) {
       filteredOthers.isInitiator = filteredOthers.isInitiator === 'true';
     }
-
+    console.log('Update fields: ', filteredOthers);
+    console.log('Operation mode: ', operationMode);
+    console.log('Operation mode length: ', operationMode.length);
     const device = await Device.findByIdAndUpdate({ _id }, { ...filteredOthers, operationMode }, { new: true });
-    io.emit('updateOperationMode', { data: { macAddress: findDevice.macAddress, operationMode } });
 
     res.status(200).json(device);
   } catch (error) {
