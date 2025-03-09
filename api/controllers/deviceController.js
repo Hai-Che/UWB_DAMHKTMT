@@ -30,7 +30,6 @@ export const updateDevice = async (req, res) => {
     }
     let operationMode = findDevice.operationMode;
     if (filteredOthers.hasOwnProperty('ledStatus') && filteredOthers.ledStatus !== findDevice.ledStatus.toString()) {
-      console.log('go here');
       const ledBit = findDevice.ledStatus ? '0' : '1';
       operationMode = operationMode.substring(0, 5) + ledBit + operationMode.substring(6);
       io.emit('updateOperationMode', { macAddress: findDevice.macAddress, operationMode });

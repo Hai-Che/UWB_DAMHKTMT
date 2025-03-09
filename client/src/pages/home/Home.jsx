@@ -35,13 +35,13 @@ const Home = () => {
       socket.emit('disable_tracking');
     }
 
-    if (data.length > 0 && track) {
-      socket.on('updateData', (transferData) => {
-        const updatedData = data.map((item) => (item.name === 'DWCE07' ? { ...item, location: transferData.location } : item));
-        setData(updatedData);
-        latestDataRef.current = updatedData;
-      });
-    }
+    // if (data.length > 0 && track) {
+    socket.on('updateData', (transferData) => {
+      const updatedData = data.map((item) => (item.name === 'DWCE07' ? { ...item, location: transferData.location } : item));
+      setData(updatedData);
+      latestDataRef.current = updatedData;
+    });
+    // }
 
     return () => {
       socket.off('updateData');

@@ -31,7 +31,7 @@ io.on('connection', (socket) => {
   socket.on('anchor_data', async (data) => {
     console.log('Received Anchor Data:', data);
 
-    const { mac, data: locationData } = data;
+    const { mac, data: locationData, operation_mode_data } = data;
 
     try {
       await Device.findOneAndUpdate(
@@ -41,7 +41,8 @@ io.on('connection', (socket) => {
             x: locationData.Position.X || 0,
             y: locationData.Position.Y || 0,
             z: locationData.Position.Z || 0
-          }
+          },
+          operationMode: operation_mode_data
         },
         { upsert: true, new: true }
       );
