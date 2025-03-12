@@ -3,23 +3,55 @@ import { MdLocationPin } from 'react-icons/md';
 import './home.scss';
 import axios from 'axios';
 import io from 'socket.io-client';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const socket = io('http://localhost:5000');
 
 const Home = () => {
   const [data, setData] = useState([]);
+  const [dataAnchor, setDataAnchor] = useState([]);
+  const [locationValid, setLocationValid] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [track, setTrack] = useState(false);
   const latestDataRef = useRef([]);
+  const latestAnchorRef = useRef([]);
+
+  function isPointInQuadrilateral(point, quad) {
+    if (!point || !quad || quad.length !== 4) {
+      console.warn('Dữ liệu không hợp lệ:', { point, quad });
+      return false;
+    }
+    function crossProduct(a, b, c) {
+      return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+    }
+
+    let [A, B, C, D] = quad;
+    let { x, y } = point;
+    let P = { x, y };
+
+    let cross1 = crossProduct(A, B, P) >= 0;
+    let cross2 = crossProduct(B, D, P) >= 0;
+    let cross3 = crossProduct(D, C, P) >= 0;
+    let cross4 = crossProduct(C, A, P) >= 0;
+
+    return cross1 === cross2 && cross2 === cross3 && cross3 === cross4;
+  }
 
   const fetchData = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/device`);
-      const filterData = res.data.filter((item) => item.location);
-      setData(filterData);
-      console.log(filterData);
-      latestDataRef.current = filterData;
+      const res = await axios.get(`http://localhost:5000/api/device`); // Get all device
+      const devices = res.data.filter((item) => item.location);
+      const anchors = devices.filter((item) => item.type === 'Anchor').map((item) => item.location);
+      const tags = devices.filter((item) => item.type === 'Tag').map((item) => item.location);
+
+      latestAnchorRef.current = anchors.length === 4 ? anchors : latestAnchorRef.current;
+      setLocationValid(isPointInQuadrilateral(tags[0], latestAnchorRef.current));
+
+      setData(devices);
+      setDataAnchor(anchors);
+      latestDataRef.current = devices;
       setLoading(false);
     } catch (err) {
       setError(err);
@@ -28,31 +60,42 @@ const Home = () => {
   };
   useEffect(() => {
     fetchData();
+  }, []);
 
-    if (track) {
-      socket.emit('enable_tracking');
-    } else {
-      socket.emit('disable_tracking');
-    }
-
-    // if (data.length > 0 && track) {
+  useEffect(() => {
     socket.on('updateData', (transferData) => {
-      const updatedData = data.map((item) => (item.name === 'DWCE07' ? { ...item, location: transferData.location } : item));
-      setData(updatedData);
-      latestDataRef.current = updatedData;
+      setData((prevData) => {
+        const updatedData = prevData.map((item) => (item.name === 'DWCE07' ? { ...item, location: transferData.location } : item));
+        latestDataRef.current = updatedData;
+        return updatedData;
+      });
+      setLocationValid(isPointInQuadrilateral(transferData.location, latestAnchorRef.current));
     });
-    // }
-
     return () => {
       socket.off('updateData');
-      if (track) {
-        const dwce07Data = latestDataRef.current.find((item) => item.name === 'DWCE07');
-        if (dwce07Data) {
-          updateDeviceInDB(dwce07Data);
-        }
-      }
     };
+  }, []);
+
+  useEffect(() => {
+    socket.emit(track ? 'enable_tracking' : 'disable_tracking');
+    const device = latestDataRef.current.find((item) => item.name === 'DWCE07');
+    if (device) updateDeviceInDB(device);
   }, [track]);
+
+  useEffect(() => {
+    console.log('locationValid changed:', locationValid);
+    if (locationValid) {
+      toast.success('Bạn đang ở trong vào khu vực làm việc', {
+        position: 'top-center',
+        autoClose: 2000
+      });
+    } else {
+      toast.warn('Bạn đang ở ngoài khu vực làm việc', {
+        position: 'top-center',
+        autoClose: 2000
+      });
+    }
+  }, [locationValid]);
 
   const updateDeviceInDB = async (device) => {
     try {
@@ -81,10 +124,10 @@ const Home = () => {
     return latestDataRef.current
       .filter((item) => item.type !== 'Tag')
       .map((item, index) => {
-        const x1 = Math.round(aPin.location.x * 100);
-        const y1 = Math.round(aPin.location.y * 100);
-        const x2 = Math.round(item.location.x * 100);
-        const y2 = Math.round(item.location.y * 100);
+        const x1 = 100 + Math.round(aPin.location.x * 100);
+        const y1 = 100 + Math.round(aPin.location.y * 100);
+        const x2 = 100 + Math.round(item.location.x * 100);
+        const y2 = 100 + Math.round(item.location.y * 100);
         const midX = (x1 + x2) / 2;
         const midY = (y1 + y2) / 2;
         const distance = calculateDistance(x1, y1, x2, y2);
@@ -134,8 +177,8 @@ const Home = () => {
               className="map-item"
               style={{
                 position: 'absolute',
-                left: `${item.location.x * 100}px`,
-                top: `${item.location.y * 100}px`
+                left: `${100 + item.location.x * 100}px`,
+                top: `${100 + item.location.y * 100}px`
               }}
             >
               <MdLocationPin className="pin" style={{ color: item.type === `Tag` ? `green` : `red` }} size={30} />

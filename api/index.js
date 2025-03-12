@@ -4,8 +4,13 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import deviceRoute from './routes/device.js';
 import locationRoute from './routes/location.js';
+import authRoute from './routes/auth.js';
+import userRoute from './routes/user.js';
+
 import http from 'http';
 import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
+
 import { Server as SocketIOServer } from 'socket.io';
 
 import Device from './models/Device.js';
@@ -13,7 +18,8 @@ const app = express();
 const server = http.createServer(app);
 export const io = new SocketIOServer(server, { cors: { origin: '*' } });
 
-app.use(cors());
+app.use(cookieParser());
+app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174'], credentials: true }));
 app.use(express.json());
 app.use(bodyParser.json());
 mongoose
@@ -84,12 +90,10 @@ io.on('connection', (socket) => {
   });
 });
 
+app.use('/api/auth', authRoute);
 app.use('/api/device', deviceRoute);
 app.use('/api/location', locationRoute);
-
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'Hello from Node.js server!' });
-});
+app.use('/api/users', userRoute);
 
 app.use((req, res, next) => {
   const error = new Error('Not found');

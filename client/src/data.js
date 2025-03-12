@@ -6,7 +6,7 @@ export const menu = [
       {
         id: 1,
         title: 'Homepage',
-        url: '/',
+        url: '/home',
         icon: 'home.svg'
       },
       {
@@ -14,13 +14,13 @@ export const menu = [
         title: 'Devices',
         url: '/devices',
         icon: 'element.svg'
+      },
+      {
+        id: 3,
+        title: 'Users',
+        url: '/users',
+        icon: 'note.svg'
       }
-      // {
-      //   id: 3,
-      //   title: "Test3D",
-      //   url: "/threeTest",
-      //   icon: "note.svg",
-      // },
     ]
   }
   // {

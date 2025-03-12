@@ -83,11 +83,16 @@ async def process_device(address, is_tag=False, max_retries=3):
     client = BleakClient(address)
     for attempt in range(max_retries):
         try:
-            await client.connect()
+            if await client.is_connected():
+                print(f"Đã kết nối với {address}, bỏ qua kết nối lại.")
+            else:
+                await client.connect()
+            
             if not await client.is_connected():
                 print(f"Không thể kết nối tới {address}, thử lại lần {attempt+1}")
                 await asyncio.sleep(2)
                 continue  # Thử lại nếu không kết nối được
+
             print(f"Đã kết nối tới {address}")
 
             loc_mode_data = await client.read_gatt_char(LOCATION_DATA_MODE_UUID)
@@ -119,14 +124,18 @@ async def process_device(address, is_tag=False, max_retries=3):
             break  # Thoát vòng lặp nếu kết nối thành công
 
         except BleakError as e:
+            if "org.bluez.Error.InProgress" in str(e):
+                print(f"Lỗi BLE với {address}: Operation already in progress, chờ 5 giây rồi thử lại...")
+                await asyncio.sleep(2)  # Đợi rồi thử lại
+                continue
             print(f"Lỗi BLE với {address}: {e}")
         except asyncio.TimeoutError:
             print(f"Timeout khi kết nối với {address}")
         except Exception as e:
             print(f"Lỗi không xác định với {address}: {e}")
         finally:
-            await client.disconnect()  # Đảm bảo luôn đóng kết nối BLE khi kết thúc
-            
+            if await client.is_connected():
+                await client.disconnect()  # Đảm bảo đóng kết nối            
 async def main():
     await connect_to_server()
     
@@ -139,8 +148,8 @@ async def main():
     print(f"Danh sách anchor: {anchors}")
     
     for anchor in anchors:
-        # await process_device(anchor, is_tag=False)
-        asyncio.create_task(process_device(anchor, is_tag=False))
+        await process_device(anchor, is_tag=False)
+        # asyncio.create_task(process_device(anchor, is_tag=False))
     
     print("Chờ lệnh từ server để xử lý Tag...")
     # asyncio.create_task(process_device(TAG_MAC, is_tag=True))

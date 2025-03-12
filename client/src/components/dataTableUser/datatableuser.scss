@@ -1,0 +1,94 @@
+@import '../../styles/variables.scss';
+
+.dataTable {
+  .dataGrid {
+    background: white;
+    padding: 20px;
+    width: inherit;
+    height: 100vh;
+    .MuiDataGrid-toolbarContainer {
+      flex-direction: row-reverse;
+    }
+
+    .action {
+      display: flex;
+      gap: 15px;
+
+      img {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+      }
+    }
+  }
+}
+
+.updateModal {
+  background-color: $main-bg;
+  padding: 50px;
+  border-radius: 10px;
+  position: relative;
+
+  h1 {
+    margin-bottom: 40px;
+    font-size: 30px;
+    color: $soft-color;
+  }
+  .close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: white;
+    cursor: pointer;
+  }
+  // width: 50%;
+  // display: flex;
+  // flex-direction: column;
+  // justify-content: center;
+  // align-items: center;
+  form {
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 500px;
+    justify-content: space-between;
+    .item {
+      width: 40%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+      color: white;
+
+      label {
+        font-size: 14px;
+      }
+
+      input {
+        padding: 10px;
+        background-color: transparent;
+        color: white;
+        outline: none;
+        border: 1px solid $soft-color;
+        border-radius: 3px;
+      }
+      select {
+        padding: 10px;
+        background-color: transparent;
+        color: white;
+        outline: none;
+        border: 1px solid $soft-color;
+        border-radius: 3px;
+        appearance: none;
+
+        option {
+          color: black;
+        }
+      }
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      cursor: pointer;
+    }
+  }
+}
