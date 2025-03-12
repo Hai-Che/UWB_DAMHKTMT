@@ -1,0 +1,65 @@
+@import '../../styles/variables.scss';
+
+.device-history {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  h2 {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .device-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .device-card {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    width: calc(50% - 10px);
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      text-align: center;
+      color: $dark-color;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+
+      .location-item {
+        display: flex;
+        justify-content: space-between;
+        background-color: $dark-color;
+        margin: 5px 0;
+        padding: 8px;
+        border-radius: 4px;
+        font-size: 14px;
+
+        .time {
+          font-weight: bold;
+          color: rgb(199, 197, 197);
+          flex: 1;
+        }
+
+        .coordinates {
+          flex: 2;
+          text-align: right;
+          color: white;
+        }
+      }
+    }
+  }
+
+  &.error {
+    color: red;
+    font-weight: bold;
+  }
+}

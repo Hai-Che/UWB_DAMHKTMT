@@ -20,6 +20,12 @@ export const menu = [
         title: 'Users',
         url: '/users',
         icon: 'note.svg'
+      },
+      {
+        id: 4,
+        title: 'Location History',
+        url: '/location-history',
+        icon: '/note.svg'
       }
     ]
   }

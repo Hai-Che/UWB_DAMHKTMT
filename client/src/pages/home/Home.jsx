@@ -89,7 +89,7 @@ const Home = () => {
         position: 'top-center',
         autoClose: 2000
       });
-    } else {
+    } else if (locationValid === false) {
       toast.warn('Bạn đang ở ngoài khu vực làm việc', {
         position: 'top-center',
         autoClose: 2000

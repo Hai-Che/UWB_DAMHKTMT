@@ -17,6 +17,7 @@ import { AuthContext } from './context/AuthContext';
 import ProfilePage from './pages/profile/ProfilePage';
 import ProfileUpdatePage from './pages/profileUpdatePage/ProfileUpdatePage';
 import Users from './pages/users/Users';
+import DeviceLocations from './pages/locationHistory/LocationHistory';
 // import ThreeDRenderer from "./pages/threeTest/threeTest";
 
 const override = {
@@ -116,6 +117,10 @@ function App() {
         {
           path: '/profile/update',
           element: <ProfileUpdatePage />
+        },
+        {
+          path: '/location-history',
+          element: <DeviceLocations />
         }
       ]
     }

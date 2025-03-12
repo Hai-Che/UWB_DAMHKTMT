@@ -1,23 +1,19 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const LocationSchema = new mongoose.Schema(
   {
     time: {
       type: String,
-      required: true,
+      required: true
     },
-    x: {
-      type: String,
-      required: true,
+    macAddress: {
+      type: String
     },
-    y: {
-      type: String,
-      required: true,
-    },
-    z: {
-      type: String,
-      required: true,
-    },
+    location: {
+      x: Number,
+      y: Number,
+      z: Number
+    }
   },
   { timestamps: true }
 );
-export default mongoose.model("Location", LocationSchema);
+export default mongoose.model('Location', LocationSchema);
