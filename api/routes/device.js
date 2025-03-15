@@ -3,6 +3,7 @@ import {
   addDevice,
   deleteDeviceByMacAddress,
   getAllDevice,
+  getAllTagDevice,
   getDeviceByMacAddress,
   updateDevice,
   updateDeviceLocation
@@ -11,6 +12,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 const router = Router();
 
 router.get('/', asyncHandler(getAllDevice));
+router.get('/get-tags', asyncHandler(getAllTagDevice));
 router.get('/:macAddress', asyncHandler(getDeviceByMacAddress));
 router.put('/location', asyncHandler(updateDeviceLocation));
 router.put('/', asyncHandler(updateDevice));

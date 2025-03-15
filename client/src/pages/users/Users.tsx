@@ -26,6 +26,12 @@ const columns: GridColDef[] = [
     headerName: 'Role',
     width: 100,
     type: 'string'
+  },
+  {
+    field: 'deviceId',
+    headerName: 'Device ID',
+    width: 100,
+    type: 'string'
   }
 ];
 
@@ -34,6 +40,7 @@ interface User {
   username: string;
   email: string;
   role: string;
+  deviceId: string;
 }
 
 const Users = () => {

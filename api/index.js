@@ -10,6 +10,7 @@ import userRoute from './routes/user.js';
 import http from 'http';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
+import nodemailer from 'nodemailer';
 
 import { Server as SocketIOServer } from 'socket.io';
 
@@ -72,7 +73,7 @@ io.on('connection', (socket) => {
         z: data.data.Position.Z
       }
     };
-    io.emit('updateData', transferData);
+    io.emit('updateData', { macAddress: data.mac, transferData });
   });
 
   socket.on('enable_tracking', () => {
@@ -88,6 +89,33 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('disconnect');
   });
+});
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'mocung9723@gmail.com',
+    pass: process.env.NODEMAILER_APP_PASS
+  }
+});
+
+app.post('/api/send-alert-email', async (req, res) => {
+  const { location, email } = req.body;
+  if (!location) return res.status(400).json({ message: 'Thiếu dữ liệu vị trí' });
+
+  const mailOptions = {
+    from: 'mocung9723@gmail.com',
+    to: `${email}`,
+    subject: 'Cảnh báo: Có thiết bị vào khu vực cấm!',
+    text: `Thiết bị đã vào khu vực cấm tại tọa độ: x=${location.x}, y=${location.y}`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: 'Email cảnh báo đã được gửi thành công' });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi gửi email', error });
+  }
 });
 
 app.use('/api/auth', authRoute);

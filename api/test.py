@@ -3,13 +3,14 @@ import time
 
 sio = socketio.Client()
 
-sio.connect('http://21.64.7.43:5000')
+sio.connect('http://21.64.12.144:5000')
 
 mockData = {
+    'macAddress': 'EB:52:53:F5:D5:90',
     'data': {     
         "Position": {
-            'X': 1,
-            'Y': 1,
+            'X': 6,
+            'Y': 5,
             'Z': 1.95
         },
     }

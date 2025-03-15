@@ -11,12 +11,21 @@ const socket = io('http://localhost:5000');
 const Home = () => {
   const [data, setData] = useState([]);
   const [dataAnchor, setDataAnchor] = useState([]);
+  const [userTagData, setUserTagData] = useState(null);
   const [locationValid, setLocationValid] = useState(null);
+  const [forbiddenLocation, setForbiddenLocation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [track, setTrack] = useState(false);
   const latestDataRef = useRef([]);
   const latestAnchorRef = useRef([]);
+
+  const forbiddenZonePoints = [
+    { x: 3, y: 2, name: 'P1' },
+    { x: 3, y: 4, name: 'P2' },
+    { x: 5, y: 2, name: 'P3' },
+    { x: 5, y: 4, name: 'P4' }
+  ];
 
   function isPointInQuadrilateral(point, quad) {
     if (!point || !quad || quad.length !== 4) {
@@ -48,6 +57,7 @@ const Home = () => {
 
       latestAnchorRef.current = anchors.length === 4 ? anchors : latestAnchorRef.current;
       setLocationValid(isPointInQuadrilateral(tags[0], latestAnchorRef.current));
+      setForbiddenLocation(isPointInQuadrilateral(tags[0], forbiddenZonePoints));
 
       setData(devices);
       setDataAnchor(anchors);
@@ -63,13 +73,22 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    socket.on('updateData', (transferData) => {
+    socket.on('updateData', async ({ macAddress, transferData }) => {
+      try {
+        const userResponse = await axios.post('http://localhost:5000/api/users/get-user-by-mac', { macAddress });
+        if (userResponse.data) {
+          setUserTagData(userResponse.data); // Lưu thông tin user
+        }
+      } catch (error) {
+        console.error('Error fetching user by MAC:', error);
+      }
       setData((prevData) => {
-        const updatedData = prevData.map((item) => (item.name === 'DWCE07' ? { ...item, location: transferData.location } : item));
+        const updatedData = prevData.map((item) => (item.macAddress === macAddress ? { ...item, location: transferData.location } : item));
         latestDataRef.current = updatedData;
         return updatedData;
       });
       setLocationValid(isPointInQuadrilateral(transferData.location, latestAnchorRef.current));
+      setForbiddenLocation(isPointInQuadrilateral(transferData.location, forbiddenZonePoints));
     });
     return () => {
       socket.off('updateData');
@@ -78,24 +97,93 @@ const Home = () => {
 
   useEffect(() => {
     socket.emit(track ? 'enable_tracking' : 'disable_tracking');
-    const device = latestDataRef.current.find((item) => item.name === 'DWCE07');
+    const device = latestDataRef.current.find((item) => item.type === 'Tag');
     if (device) updateDeviceInDB(device);
   }, [track]);
 
   useEffect(() => {
     console.log('locationValid changed:', locationValid);
-    if (locationValid) {
-      toast.success('Bạn đang ở trong vào khu vực làm việc', {
-        position: 'top-center',
-        autoClose: 2000
-      });
-    } else if (locationValid === false) {
-      toast.warn('Bạn đang ở ngoài khu vực làm việc', {
-        position: 'top-center',
-        autoClose: 2000
+    // if (userTagData && userTagData[0] && userTagData[0].username) {
+    //   const username = userTagData[0].username;
+
+    //   if (locationValid) {
+    //     toast.success(`${username} đang ở trong khu vực làm việc`, {
+    //       position: 'top-center',
+    //       autoClose: 2000
+    //     });
+    //   } else if (locationValid === false) {
+    //     toast.warn(`${username} đang ở ngoài khu vực làm việc`, {
+    //       position: 'top-center',
+    //       autoClose: 2000
+    //     });
+    //   }
+    // }
+    if (userTagData && userTagData.length > 0) {
+      userTagData.forEach((user) => {
+        if (user.username) {
+          if (locationValid) {
+            toast.success(`${user.username} đang ở trong khu vực làm việc`, {
+              position: 'top-center',
+              autoClose: 2000
+            });
+          } else if (locationValid === false) {
+            toast.warn(`${user.username} đang ở ngoài khu vực làm việc`, {
+              position: 'top-center',
+              autoClose: 2000
+            });
+          }
+        }
       });
     }
   }, [locationValid]);
+
+  useEffect(() => {
+    console.log('forbiddenLocation changed:', forbiddenLocation);
+    // if (userTagData && userTagData[0] && userTagData[0].username) {
+    //   const email = userTagData[0].email;
+    //   if (forbiddenLocation === true) {
+    //     toast.error('Bạn đang ở trong khu vực cấm', {
+    //       position: 'top-center',
+    //       autoClose: 2000
+    //     });
+    //     axios
+    //       .post('http://localhost:5000/api/send-alert-email', {
+    //         location: latestDataRef.current.find((item) => item.type === 'Tag')?.location,
+    //         email
+    //       })
+    //       .then((response) => {
+    //         console.log(`Email cảnh báo đã được gửi tới ${email}}:`, response.data);
+    //       })
+    //       .catch((error) => {
+    //         console.error('Lỗi gửi email cảnh báo:', error);
+    //       });
+    //   }
+    // }
+    if (userTagData && userTagData.length > 0) {
+      userTagData.forEach((user) => {
+        if (user.email) {
+          if (forbiddenLocation === true) {
+            toast.error(`${user.username || 'Người dùng'} đang ở trong khu vực cấm`, {
+              position: 'top-center',
+              autoClose: 2000
+            });
+
+            axios
+              .post('http://localhost:5000/api/send-alert-email', {
+                location: latestDataRef.current.find((item) => item.type === 'Tag')?.location,
+                email: user.email
+              })
+              .then((response) => {
+                console.log(`Email cảnh báo đã được gửi tới ${user.email}:`, response.data);
+              })
+              .catch((error) => {
+                console.error(`Lỗi gửi email cảnh báo đến ${user.email}:`, error);
+              });
+          }
+        }
+      });
+    }
+  }, [forbiddenLocation]);
 
   const updateDeviceInDB = async (device) => {
     try {
@@ -136,7 +224,7 @@ const Home = () => {
           <g key={index}>
             <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="white" strokeDasharray="5,5" strokeWidth="2" />
             <text x={midX} y={midY} textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="10" style={{ marginLeft: '10px' }}>
-              {Math.round((distance / 100) * 100) / 100}
+              {Math.round((distance / 20) * 100) / 100}
             </text>
           </g>
         );
@@ -187,6 +275,16 @@ const Home = () => {
               <p className="map-item-detail">
                 x: {item.location.x}, y: {item.location.y}
               </p>
+            </div>
+          ))}
+          {forbiddenZonePoints.map((point, index) => (
+            <div
+              key={index}
+              className="map-item fixed"
+              style={{ position: 'absolute', left: `${100 + point.x * 100}px`, top: `${100 + point.y * 100}px` }}
+            >
+              <MdLocationPin className="pin" style={{ color: 'yellow' }} size={30} />
+              <p className="map-item-detail">{point.name}</p>
             </div>
           ))}
         </div>

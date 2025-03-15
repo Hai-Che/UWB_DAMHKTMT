@@ -20,6 +20,7 @@ interface User {
   username: string;
   email: string;
   role: string;
+  deviceId: string;
 }
 
 const customStyles = {
@@ -38,6 +39,28 @@ const DataTableUser = (props: Props) => {
   const [data, setData] = useState<User[]>(props.rows);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any>(null);
+
+  const [tagData, setTagData] = useState<string[]>([]);
+
+  useEffect(() => {
+    dispatch(actions.controlLoading(true));
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/device/get-tags`);
+        if (Array.isArray(res.data)) {
+          setTagData(res.data.map((tag: any) => tag.name));
+        } else {
+          setTagData([]);
+        }
+        dispatch(actions.controlLoading(false));
+      } catch (err) {
+        dispatch(actions.controlLoading(false));
+        console.log(err);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     setData(props.rows);
@@ -147,9 +170,30 @@ const DataTableUser = (props: Props) => {
                   {props.columns
                     .filter((item) => item.field !== '_id' && item.field !== 'role')
                     .map((column) => (
+                      // <div className="item" key={column.field}>
+                      //   <label>{column.headerName}</label>
+                      //   <input type={column.type} id={column.field} name={column.field} placeholder={`Enter ${column.field}`} />
+                      // </div>
                       <div className="item" key={column.field}>
                         <label>{column.headerName}</label>
-                        <input type={column.type} id={column.field} name={column.field} placeholder={`Enter ${column.field}`} />
+                        {column.field !== 'deviceId' ? (
+                          <input
+                            type="text"
+                            id={column.field}
+                            name={column.field}
+                            placeholder={`Enter ${column.field}`}
+                            defaultValue={selectedRow[column.field]}
+                          />
+                        ) : (
+                          <select id={column.field} name={column.field} defaultValue="">
+                            <option value="">Danh sách tag active</option>
+                            {tagData.map((tag) => (
+                              <option key={tag} value={tag}>
+                                {tag}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </div>
                     ))}
                   <input type="hidden" id="_id" name="_id" value={selectedRow['_id']}></input>

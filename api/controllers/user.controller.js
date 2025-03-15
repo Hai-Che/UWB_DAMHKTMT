@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import User from '../models/User.js';
+import Device from '../models/Device.js';
 
 export const getUsers = async (req, res) => {
   try {
@@ -8,6 +9,32 @@ export const getUsers = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: 'Failed to get all user' });
+  }
+};
+
+export const getUserByMacAddress = async (req, res) => {
+  try {
+    const { macAddress } = req.body;
+    if (!macAddress) {
+      return res.status(400).json({ message: 'MAC address is required' });
+    }
+
+    const device = await Device.findOne({ macAddress });
+
+    if (!device) {
+      return res.status(404).json({ message: 'Device not found' });
+    }
+
+    const users = await User.find({ deviceId: device._id }).populate('deviceId');
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'No users found for this MAC address' });
+    }
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to get user by MAC address' });
   }
 };
 
@@ -72,6 +99,13 @@ export const updateUserTable = async (req, res) => {
     if (Object.keys(filteredOthers).length === 0) {
       return res.status(200).json('Không có field cập nhật');
     }
+    if (filteredOthers.deviceId) {
+      filteredOthers.deviceId = await Device.findOne({ name: filteredOthers.deviceId }, { _id: 1 });
+    }
+    if (!filteredOthers.deviceId) {
+      await User.findByIdAndUpdate({ _id }, { deviceId: null }, { new: true });
+    }
+    console.log(filteredOthers);
     const user = await User.findByIdAndUpdate({ _id }, { ...filteredOthers }, { new: true });
 
     res.status(200).json(user);

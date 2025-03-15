@@ -6,6 +6,11 @@ export const getAllDevice = async (req, res) => {
   res.status(200).json(devices);
 };
 
+export const getAllTagDevice = async (req, res) => {
+  const devices = await Device.find({ type: 'Tag' }).lean();
+  res.status(200).json(devices);
+};
+
 export const getDeviceByMacAddress = async (req, res) => {
   const device = await Device.findOne({ name: req.params.macAddress });
   res.status(200).json(device);
