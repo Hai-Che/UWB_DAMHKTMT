@@ -7,18 +7,20 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const socket = io('http://localhost:5000');
-
+const scaleValue = 50;
 const Home = () => {
   const [data, setData] = useState([]);
   const [dataAnchor, setDataAnchor] = useState([]);
-  const [userTagData, setUserTagData] = useState(null);
-  const [locationValid, setLocationValid] = useState(null);
-  const [forbiddenLocation, setForbiddenLocation] = useState(null);
+  const [showLines, setShowLines] = useState(true);
+  const [userTagData, setUserTagData] = useState([]);
+  const [locationValid, setLocationValid] = useState([]);
+  // const [forbiddenLocation, setForbiddenLocation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [track, setTrack] = useState(false);
   const latestDataRef = useRef([]);
   const latestAnchorRef = useRef([]);
+  const prevLocationValidRef = useRef([]);
 
   const forbiddenZonePoints = [
     { x: 3, y: 2, name: 'P1' },
@@ -48,6 +50,10 @@ const Home = () => {
     return cross1 === cross2 && cross2 === cross3 && cross3 === cross4;
   }
 
+  const toggleLines = () => {
+    setShowLines((prev) => !prev);
+  };
+
   const fetchData = async () => {
     try {
       const res = await axios.get(`http://localhost:5000/api/device`); // Get all device
@@ -56,8 +62,17 @@ const Home = () => {
       const tags = devices.filter((item) => item.type === 'Tag').map((item) => item.location);
 
       latestAnchorRef.current = anchors.length === 4 ? anchors : latestAnchorRef.current;
-      setLocationValid(isPointInQuadrilateral(tags[0], latestAnchorRef.current));
-      setForbiddenLocation(isPointInQuadrilateral(tags[0], forbiddenZonePoints));
+
+      const locationStatus = tags
+        .filter((tag) => tag.macAddress !== undefined)
+        .map((tag) => ({
+          macAddress: tag.macAddress,
+          locationValid: isPointInQuadrilateral(tag.location, latestAnchorRef.current),
+          forbiddenLocation: isPointInQuadrilateral(tag.location, forbiddenZonePoints)
+        }));
+      if (JSON.stringify(locationValid) !== JSON.stringify(locationStatus)) {
+        setLocationValid(locationStatus);
+      }
 
       setData(devices);
       setDataAnchor(anchors);
@@ -84,11 +99,22 @@ const Home = () => {
       }
       setData((prevData) => {
         const updatedData = prevData.map((item) => (item.macAddress === macAddress ? { ...item, location: transferData.location } : item));
+        const tags = updatedData.filter((item) => item.type === 'Tag');
+        const locationStatus = tags
+          .filter((tag) => tag.macAddress !== undefined)
+          .map((tag) => ({
+            macAddress: tag.macAddress,
+            locationValid: isPointInQuadrilateral(tag.location, latestAnchorRef.current),
+            forbiddenLocation: isPointInQuadrilateral(tag.location, forbiddenZonePoints)
+          }));
+        if (JSON.stringify(locationValid) !== JSON.stringify(locationStatus)) {
+          setLocationValid(locationStatus);
+        }
+
+        if (tags.length > 0) updateDeviceInDB(tags);
         latestDataRef.current = updatedData;
         return updatedData;
       });
-      setLocationValid(isPointInQuadrilateral(transferData.location, latestAnchorRef.current));
-      setForbiddenLocation(isPointInQuadrilateral(transferData.location, forbiddenZonePoints));
     });
     return () => {
       socket.off('updateData');
@@ -102,95 +128,97 @@ const Home = () => {
   }, [track]);
 
   useEffect(() => {
-    console.log('locationValid changed:', locationValid);
-    // if (userTagData && userTagData[0] && userTagData[0].username) {
-    //   const username = userTagData[0].username;
-
-    //   if (locationValid) {
-    //     toast.success(`${username} đang ở trong khu vực làm việc`, {
-    //       position: 'top-center',
-    //       autoClose: 2000
-    //     });
-    //   } else if (locationValid === false) {
-    //     toast.warn(`${username} đang ở ngoài khu vực làm việc`, {
-    //       position: 'top-center',
-    //       autoClose: 2000
-    //     });
-    //   }
+    // if (JSON.stringify(prevLocationValidRef.current) !== JSON.stringify(locationValid)) {
+    //   console.log('locationValid changed:', locationValid);
+    //   prevLocationValidRef.current = locationValid; // Cập nhật giá trị mới
     // }
-    if (userTagData && userTagData.length > 0) {
-      userTagData.forEach((user) => {
-        if (user.username) {
-          if (locationValid) {
-            toast.success(`${user.username} đang ở trong khu vực làm việc`, {
-              position: 'top-center',
-              autoClose: 2000
-            });
-          } else if (locationValid === false) {
-            toast.warn(`${user.username} đang ở ngoài khu vực làm việc`, {
-              position: 'top-center',
-              autoClose: 2000
-            });
+    const prevLocationValid = prevLocationValidRef.current;
+    const changedItems = locationValid.filter((newItem) => {
+      const oldItem = prevLocationValid.find((item) => item.macAddress === newItem.macAddress);
+      return !oldItem || oldItem.locationValid !== newItem.locationValid;
+    });
+
+    if (changedItems.length > 0) {
+      console.log('Các phần tử thay đổi:', changedItems);
+      if (userTagData) {
+        console.log(userTagData);
+        userTagData.forEach((user) => {
+          const status = changedItems.find((item) => item.macAddress === user.deviceId.macAddress);
+          if (status && user.username) {
+            if (status.locationValid) {
+              toast.success(`${user.username} đang ở trong khu vực làm việc`, {
+                position: 'top-center',
+                autoClose: 2000
+              });
+            } else if (status.locationValid === false) {
+              toast.warn(`${user.username} đang ở ngoài khu vực làm việc`, {
+                position: 'top-center',
+                autoClose: 2000
+              });
+            }
           }
-        }
-      });
+        });
+      }
+      prevLocationValidRef.current = locationValid; // Cập nhật giá trị mới
     }
   }, [locationValid]);
 
   useEffect(() => {
-    console.log('forbiddenLocation changed:', forbiddenLocation);
-    // if (userTagData && userTagData[0] && userTagData[0].username) {
-    //   const email = userTagData[0].email;
-    //   if (forbiddenLocation === true) {
-    //     toast.error('Bạn đang ở trong khu vực cấm', {
-    //       position: 'top-center',
-    //       autoClose: 2000
-    //     });
-    //     axios
-    //       .post('http://localhost:5000/api/send-alert-email', {
-    //         location: latestDataRef.current.find((item) => item.type === 'Tag')?.location,
-    //         email
-    //       })
-    //       .then((response) => {
-    //         console.log(`Email cảnh báo đã được gửi tới ${email}}:`, response.data);
-    //       })
-    //       .catch((error) => {
-    //         console.error('Lỗi gửi email cảnh báo:', error);
-    //       });
-    //   }
+    // if (JSON.stringify(prevLocationValidRef.current) !== JSON.stringify(locationValid)) {
+    //   console.log('locationValid changed:', locationValid);
+    //   prevLocationValidRef.current = locationValid; // Cập nhật giá trị mới
     // }
-    if (userTagData && userTagData.length > 0) {
-      userTagData.forEach((user) => {
-        if (user.email) {
-          if (forbiddenLocation === true) {
-            toast.error(`${user.username || 'Người dùng'} đang ở trong khu vực cấm`, {
-              position: 'top-center',
-              autoClose: 2000
-            });
+    const prevLocationValid = prevLocationValidRef.current;
+    const changedItems = locationValid.filter((newItem) => {
+      const oldItem = prevLocationValid.find((item) => item.macAddress === newItem.macAddress);
+      return !oldItem || oldItem.forbiddenLocation !== newItem.forbiddenLocation;
+    });
 
-            axios
-              .post('http://localhost:5000/api/send-alert-email', {
-                location: latestDataRef.current.find((item) => item.type === 'Tag')?.location,
-                email: user.email
-              })
-              .then((response) => {
-                console.log(`Email cảnh báo đã được gửi tới ${user.email}:`, response.data);
-              })
-              .catch((error) => {
-                console.error(`Lỗi gửi email cảnh báo đến ${user.email}:`, error);
+    if (changedItems.length > 0) {
+      console.log('Các phần tử thay đổi:', changedItems);
+      if (userTagData) {
+        console.log(userTagData);
+        userTagData.forEach((user) => {
+          const status = changedItems.find((item) => item.macAddress === user.deviceId.macAddress);
+          if (status && user.username) {
+            if (status.forbiddenLocation) {
+              toast.error(`${user.username || 'Người dùng'} đang ở trong khu vực cấm`, {
+                position: 'top-center',
+                autoClose: 2000
               });
+
+              axios
+                .post('http://localhost:5000/api/send-alert-email', {
+                  location: latestDataRef.current.find((item) => item.type === 'Tag')?.location,
+                  email: user.email
+                })
+                .then((response) => {
+                  console.log(`Email cảnh báo đã được gửi tới ${user.email}:`, response.data);
+                })
+                .catch((error) => {
+                  console.error(`Lỗi gửi email cảnh báo đến ${user.email}:`, error);
+                });
+            }
           }
-        }
-      });
+        });
+      }
+      prevLocationValidRef.current = locationValid; // Cập nhật giá trị mới
     }
-  }, [forbiddenLocation]);
+  }, [locationValid]);
 
-  const updateDeviceInDB = async (device) => {
+  const updateDeviceInDB = async (devices) => {
     try {
-      const response = await axios.put(`http://localhost:5000/api/device/location`, { location: device.location, macAddress: device.macAddress });
+      const requests = devices.map((device) =>
+        axios.put(`http://localhost:5000/api/device/location`, {
+          location: device.location,
+          macAddress: device.macAddress
+        })
+      );
 
-      if (response.status === 200) {
-        console.log('Cập nhật database thành công:', device);
+      const responses = await Promise.all(requests);
+
+      if (responses.every((res) => res.status === 200)) {
+        console.log('Cập nhật database thành công:', devices);
         fetchData();
       }
     } catch (error) {
@@ -206,45 +234,59 @@ const Home = () => {
     return <div className="home">Error: {error.message}</div>;
   }
   const getLines = () => {
-    const aPin = latestDataRef.current.find((item) => item.type === 'Tag');
-    if (!aPin || !aPin.location) return null;
+    if (!showLines) return null;
+    const tagPins = latestDataRef.current.filter((item) => item.type === 'Tag'); // Lấy tất cả các Tag
+    if (tagPins.length === 0) return null;
 
-    return latestDataRef.current
-      .filter((item) => item.type !== 'Tag')
-      .map((item, index) => {
-        const x1 = 100 + Math.round(aPin.location.x * 100);
-        const y1 = 100 + Math.round(aPin.location.y * 100);
-        const x2 = 100 + Math.round(item.location.x * 100);
-        const y2 = 100 + Math.round(item.location.y * 100);
-        const midX = (x1 + x2) / 2;
-        const midY = (y1 + y2) / 2;
-        const distance = calculateDistance(x1, y1, x2, y2);
+    return tagPins.flatMap((tag, tagIndex) =>
+      latestDataRef.current
+        .filter((item) => item.type !== 'Tag')
+        .map((item, index) => {
+          const x1 = 100 + Math.round(tag.location.x * scaleValue);
+          const y1 = 100 + Math.round(tag.location.y * scaleValue);
+          const x2 = 100 + Math.round(item.location.x * scaleValue);
+          const y2 = 100 + Math.round(item.location.y * scaleValue);
+          const midX = (x1 + x2) / 2;
+          const midY = (y1 + y2) / 2;
+          const distance = calculateDistance(x1, y1, x2, y2);
 
-        return (
-          <g key={index}>
-            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="white" strokeDasharray="5,5" strokeWidth="2" />
-            <text x={midX} y={midY} textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="10" style={{ marginLeft: '10px' }}>
-              {Math.round((distance / 20) * 100) / 100}
-            </text>
-          </g>
-        );
-      });
+          return (
+            <g key={`${tagIndex}-${index}`}>
+              <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="white" strokeDasharray="5,5" strokeWidth="2" />
+              <text x={midX} y={midY} textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="10">
+                {Math.round((distance / 100) * 100) / 100}
+              </text>
+            </g>
+          );
+        })
+    );
   };
-
   const calculateDistance = (x1, y1, x2, y2) => {
     return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)).toFixed(2);
   };
 
-  const getDistance = (x, y) => {
-    const aPin = latestDataRef.current.find((item) => item.type === 'Tag');
-    if (!aPin) return null;
-    return Math.sqrt(Math.pow(aPin.location.x - x, 2) + Math.pow(aPin.location.y - y, 2)).toFixed(2);
-  };
+  // const getDistance = (x, y) => {
+  //   const aPin = latestDataRef.current.find((item) => item.type === 'Tag');
+  //   if (!aPin) return null;
+  //   return Math.sqrt(Math.pow(aPin.location.x - x, 2) + Math.pow(aPin.location.y - y, 2)).toFixed(2);
+  // };
 
   return (
     <div className="home">
       <div className="home-title">{track ? <span>Is tracking</span> : <span>Switch to track</span>}</div>
       <div className="home-control">
+        {/* <button onClick={toggleLines}>{showLines ? 'Ẩn đường nối' : 'Hiện đường nối'}</button> */}
+        <label className="switch">
+          <input
+            type="checkbox"
+            checked={showLines}
+            onClick={toggleLines}
+            // onChange={() => {
+            //   setTrack(!track);
+            // }}
+          />
+          <span className="slider round"></span>
+        </label>
         <label className="switch">
           <input
             type="checkbox"
@@ -265,11 +307,13 @@ const Home = () => {
               className="map-item"
               style={{
                 position: 'absolute',
-                left: `${100 + item.location.x * 100}px`,
-                top: `${100 + item.location.y * 100}px`
+                left: `${100 + item.location.x * scaleValue}px`,
+                top: `${100 + item.location.y * scaleValue}px`
               }}
             >
               <MdLocationPin className="pin" style={{ color: item.type === `Tag` ? `green` : `red` }} size={30} />
+              <p className="map-item-detail">{item.name}</p>
+
               <p className="map-item-detail">{item.name}</p>
               <p className="map-item-detail">{item.type}</p>
               <p className="map-item-detail">
@@ -281,7 +325,7 @@ const Home = () => {
             <div
               key={index}
               className="map-item fixed"
-              style={{ position: 'absolute', left: `${100 + point.x * 100}px`, top: `${100 + point.y * 100}px` }}
+              style={{ position: 'absolute', left: `${100 + point.x * scaleValue}px`, top: `${100 + point.y * scaleValue}px` }}
             >
               <MdLocationPin className="pin" style={{ color: 'yellow' }} size={30} />
               <p className="map-item-detail">{point.name}</p>
@@ -301,10 +345,10 @@ const Home = () => {
                   <span>x:{item.location.x}</span>
                   <span>y:{item.location.y}</span>
                 </div>
-                <div className="info-item-detail">
+                {/* <div className="info-item-detail">
                   <span>Distance:</span>
                   <span>{getDistance(item.location.x, item.location.y)}</span>
-                </div>
+                </div> */}
               </div>
             ))}
           </div>

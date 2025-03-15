@@ -13,13 +13,14 @@
 .home-control {
   display: flex;
   padding-bottom: 5px;
-  justify-content: center;
+  justify-content: left;
   --switch-height: 30px;
   --switch-padding: 8px;
   --switch-width: calc((var(--switch-height) * 2) - var(--switch-padding));
   --slider-height: calc(var(--switch-height) - var(--switch-padding));
   --slider-on: calc(var(--switch-height) - var(--switch-padding));
   .switch {
+    margin: 0px 150px;
     position: relative;
     display: inline-block;
     width: var(--switch-width);

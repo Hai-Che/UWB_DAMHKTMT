@@ -4,6 +4,9 @@ export const getAllLocation = async (req, res) => {
   try {
     const locations = await Location.aggregate([
       {
+        $sort: { time: -1 } // Sắp xếp theo thời gian giảm dần
+      },
+      {
         $group: {
           _id: '$macAddress',
           locations: {
@@ -12,6 +15,12 @@ export const getAllLocation = async (req, res) => {
               location: '$location'
             }
           }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          locations: { $slice: ['$locations', 5] } // Chỉ lấy 10 phần tử đầu tiên (mới nhất)
         }
       }
     ]);

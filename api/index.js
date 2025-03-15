@@ -15,6 +15,8 @@ import nodemailer from 'nodemailer';
 import { Server as SocketIOServer } from 'socket.io';
 
 import Device from './models/Device.js';
+import Location from './models/Location.js';
+import moment from 'moment/moment.js';
 const app = express();
 const server = http.createServer(app);
 export const io = new SocketIOServer(server, { cors: { origin: '*' } });
@@ -39,8 +41,17 @@ io.on('connection', (socket) => {
     console.log('Received Anchor Data:', data);
 
     const { mac, data: locationData, operation_mode_data } = data;
-
+    const currentTime = moment().format('YYYY:MM:DD HH:mm:ss');
     try {
+      await Location.create({
+        time: currentTime,
+        macAddress: mac,
+        location: {
+          x: locationData.Position.X || 0,
+          y: locationData.Position.Y || 0,
+          z: locationData.Position.Z || 0
+        }
+      });
       await Device.findOneAndUpdate(
         { macAddress: mac },
         {
@@ -60,17 +71,31 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('tag_data', (data) => {
+  socket.on('tag_data', async (data) => {
     if (!data || !data.data || !data.data.Position) {
       console.error('Invalid tag data format:', data);
       return;
     }
     console.log('Tag Data:', data);
+    const currentTime = moment().format('YYYY:MM:DD HH:mm:ss');
+    try {
+      await Location.create({
+        time: currentTime,
+        macAddress: data.mac,
+        location: {
+          x: data.data.Position.X || 0,
+          y: data.data.Position.Y || 0,
+          z: data.data.Position.Z || 0
+        }
+      });
+    } catch (error) {
+      console.error('Error updating device:', error);
+    }
     const transferData = {
       location: {
-        x: data.data.Position.X,
-        y: data.data.Position.Y,
-        z: data.data.Position.Z
+        x: Math.round(data.data.Position.X * 10) / 10,
+        y: Math.round(data.data.Position.Y * 10) / 10,
+        z: Math.round(data.data.Position.Z * 10) / 10
       }
     };
     io.emit('updateData', { macAddress: data.mac, transferData });
