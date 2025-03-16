@@ -131,8 +131,8 @@ app.post('/api/send-alert-email', async (req, res) => {
   const mailOptions = {
     from: 'mocung9723@gmail.com',
     to: `${email}`,
-    subject: 'Cảnh báo: Có thiết bị vào khu vực cấm!',
-    text: `Thiết bị đã vào khu vực cấm tại tọa độ: x=${location.x}, y=${location.y}`
+    subject: 'Cảnh báo: Bạn đã tiến vào khu vực không được cho phép!',
+    text: `Bạn đã vào khu vực không được cho phép tại tọa độ: x=${location.x}, y=${location.y}. Vui lòng rời khỏi khu vực này!`
   };
 
   try {

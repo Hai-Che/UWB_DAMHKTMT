@@ -4,16 +4,23 @@
   height: 100vh;
 }
 
+.home-top {
+  display: flex;
+}
+
 .home-title {
+  margin-top: 5px;
   height: 20px;
   display: flex;
   justify-content: center;
+  margin-left: 60px;
 }
 
 .home-control {
+  margin-left: 60px;
   display: flex;
   padding-bottom: 5px;
-  justify-content: left;
+  justify-content: center;
   --switch-height: 30px;
   --switch-padding: 8px;
   --switch-width: calc((var(--switch-height) * 2) - var(--switch-padding));

@@ -100,12 +100,19 @@ export const updateUserTable = async (req, res) => {
       return res.status(200).json('Không có field cập nhật');
     }
     if (filteredOthers.deviceId) {
-      filteredOthers.deviceId = await Device.findOne({ name: filteredOthers.deviceId }, { _id: 1 });
+      const device = await Device.findOne({ name: filteredOthers.deviceId }, { _id: 1 });
+
+      if (device) {
+        filteredOthers.deviceId = device._id;
+        await Device.findByIdAndUpdate(device._id, { userId: _id });
+      } else {
+        filteredOthers.deviceId = null;
+      }
     }
     if (!filteredOthers.deviceId) {
       await User.findByIdAndUpdate({ _id }, { deviceId: null }, { new: true });
+      await Device.findOneAndUpdate({ userId: _id }, { userId: null }, { new: true });
     }
-    console.log(filteredOthers);
     const user = await User.findByIdAndUpdate({ _id }, { ...filteredOthers }, { new: true });
 
     res.status(200).json(user);

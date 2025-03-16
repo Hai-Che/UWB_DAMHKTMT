@@ -25,7 +25,7 @@ const DeviceHistory = () => {
 
   return (
     <div className="device-history">
-      <h2>Lịch sử vị trí thiết bị</h2>
+      <h2>Lịch sử vị trí của các thiết bị Tag</h2>
       <div className="device-grid">
         {devices.map((device) => (
           <div key={device._id} className="device-card">

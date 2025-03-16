@@ -3,8 +3,7 @@ import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 
 export const register = async (req, res) => {
-  console.log('go here');
-  const { username, email, password } = req.body;
+  const { username, email, password, role } = req.body;
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -14,7 +13,8 @@ export const register = async (req, res) => {
     await User.create({
       username,
       password: hashPassword,
-      email
+      email,
+      role
     });
     res.status(201).json({ message: 'Create user successfully' });
   } catch (error) {

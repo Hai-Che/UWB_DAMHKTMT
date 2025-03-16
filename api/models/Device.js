@@ -26,6 +26,11 @@ const DeviceSchema = new mongoose.Schema(
       default: 'active',
       enum: ['off', 'passive', 'active']
     },
+    userId: {
+      type: mongoose.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
     ledStatus: {
       type: Boolean,
       default: false

@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
 import './devices.scss';
-import DataTable from '../../components/dataTable/DataTable';
+import { useEffect, useState } from 'react';
 import { GridColDef } from '@mui/x-data-grid';
+import { useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
+import DataTable from '../../components/dataTable/DataTable';
 import Modal from 'react-modal';
 import React from 'react';
 import axios from 'axios';
 import * as actions from '../../redux/actions';
-import { useDispatch } from 'react-redux';
-import { toast } from 'react-toastify';
 
 const columns: GridColDef[] = [
   { field: '_id', headerName: 'ID', width: 220 },
@@ -132,15 +132,10 @@ const Devices = () => {
     <div className="products">
       <div className="info">
         <h1>Devices</h1>
-        <button onClick={() => setOpen(true)}>Add New Devices</button>
+        <button onClick={() => setOpen(true)}>Add new device</button>
       </div>
       <DataTable slug="products" columns={columns} rows={data} />
-      <Modal
-        isOpen={open}
-        onRequestClose={closeModal}
-        contentLabel="Update Modal"
-        style={customStyles}
-      >
+      <Modal isOpen={open} onRequestClose={closeModal} contentLabel="Update Modal" style={customStyles}>
         <div className="updateModal">
           <h1>Add new device</h1>
           <div className="form-update">
@@ -170,12 +165,7 @@ const Devices = () => {
                         <option value="off">Off</option>
                       </select>
                     ) : (
-                      <input
-                        type={column.type}
-                        id={column.field}
-                        name={column.field}
-                        placeholder={`Enter ${column.field}`}
-                      />
+                      <input type={column.type} id={column.field} name={column.field} placeholder={`Enter ${column.field}`} />
                     )}
                   </div>
                 ))}

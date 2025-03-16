@@ -39,6 +39,7 @@ const DataTableUser = (props: Props) => {
   const [data, setData] = useState<User[]>(props.rows);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any>(null);
+  const [refresh, setRefresh] = useState(false);
 
   const [tagData, setTagData] = useState<string[]>([]);
 
@@ -60,7 +61,7 @@ const DataTableUser = (props: Props) => {
     };
 
     fetchData();
-  }, []);
+  }, [refresh]);
 
   useEffect(() => {
     setData(props.rows);
@@ -90,6 +91,8 @@ const DataTableUser = (props: Props) => {
     try {
       const res = await apiRequest.put(`/users/table-user`, inputs);
       dispatch(actions.controlLoading(false));
+      setRefresh(!refresh);
+
       toast.success('User has been updated successfully', {
         position: 'top-center',
         autoClose: 2000
@@ -160,7 +163,7 @@ const DataTableUser = (props: Props) => {
         />
         <Modal isOpen={modalIsOpen} onRequestClose={closeModal} contentLabel="Update Modal" style={customStyles}>
           <div className="updateModal">
-            <h1>Update Device</h1>
+            <h1>Update user</h1>
             {selectedRow && (
               <div className="form-update">
                 <span className="close" onClick={closeModal}>

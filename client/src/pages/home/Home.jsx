@@ -5,13 +5,13 @@ import axios from 'axios';
 import io from 'socket.io-client';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+// import { Stage, Layer, Polygon } from 'react-konva';
 const socket = io('http://localhost:5000');
 const scaleValue = 50;
 const Home = () => {
   const [data, setData] = useState([]);
   const [dataAnchor, setDataAnchor] = useState([]);
-  const [showLines, setShowLines] = useState(true);
+  const [showLines, setShowLines] = useState(false);
   const [userTagData, setUserTagData] = useState([]);
   const [locationValid, setLocationValid] = useState([]);
   // const [forbiddenLocation, setForbiddenLocation] = useState(null);
@@ -23,11 +23,13 @@ const Home = () => {
   const prevLocationValidRef = useRef([]);
 
   const forbiddenZonePoints = [
-    { x: 3, y: 2, name: 'P1' },
-    { x: 3, y: 4, name: 'P2' },
-    { x: 5, y: 2, name: 'P3' },
-    { x: 5, y: 4, name: 'P4' }
+    { x: 2, y: 6, name: 'P1' },
+    { x: 2, y: 8, name: 'P2' },
+    { x: 4, y: 6, name: 'P3' },
+    { x: 4, y: 8, name: 'P4' }
   ];
+
+  const polygonPoints = forbiddenZonePoints.map((point) => `${100 + point.x * scaleValue},${100 + point.y * scaleValue}`).join(' ');
 
   function isPointInQuadrilateral(point, quad) {
     if (!point || !quad || quad.length !== 4) {
@@ -164,10 +166,6 @@ const Home = () => {
   }, [locationValid]);
 
   useEffect(() => {
-    // if (JSON.stringify(prevLocationValidRef.current) !== JSON.stringify(locationValid)) {
-    //   console.log('locationValid changed:', locationValid);
-    //   prevLocationValidRef.current = locationValid; // Cập nhật giá trị mới
-    // }
     const prevLocationValid = prevLocationValidRef.current;
     const changedItems = locationValid.filter((newItem) => {
       const oldItem = prevLocationValid.find((item) => item.macAddress === newItem.macAddress);
@@ -182,10 +180,13 @@ const Home = () => {
           const status = changedItems.find((item) => item.macAddress === user.deviceId.macAddress);
           if (status && user.username) {
             if (status.forbiddenLocation) {
-              toast.error(`${user.username || 'Người dùng'} đang ở trong khu vực cấm`, {
-                position: 'top-center',
-                autoClose: 2000
-              });
+              toast.error(
+                `${user.username || 'Người dùng'} đang ở trong khu vực cấm. Email cảnh báo đã được gửi tới email ${user.email || 'người dùng'}`,
+                {
+                  position: 'top-center',
+                  autoClose: 2000
+                }
+              );
 
               axios
                 .post('http://localhost:5000/api/send-alert-email', {
@@ -273,30 +274,38 @@ const Home = () => {
 
   return (
     <div className="home">
-      <div className="home-title">{track ? <span>Is tracking</span> : <span>Switch to track</span>}</div>
-      <div className="home-control">
-        {/* <button onClick={toggleLines}>{showLines ? 'Ẩn đường nối' : 'Hiện đường nối'}</button> */}
-        <label className="switch">
-          <input
-            type="checkbox"
-            checked={showLines}
-            onClick={toggleLines}
-            // onChange={() => {
-            //   setTrack(!track);
-            // }}
-          />
-          <span className="slider round"></span>
-        </label>
-        <label className="switch">
-          <input
-            type="checkbox"
-            checked={track}
-            onChange={() => {
-              setTrack(!track);
-            }}
-          />
-          <span className="slider round"></span>
-        </label>
+      <div className="home-top">
+        <div className="home-top-child">
+          <div className="home-title">{showLines ? <span>Hiển thị đường nối</span> : <span>Ẩn đường nối</span>}</div>
+          <div className="home-control">
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={showLines}
+                onClick={toggleLines}
+                // onChange={() => {
+                //   setTrack(!track);
+                // }}
+              />
+              <span className="slider round"></span>
+            </label>
+          </div>
+        </div>
+        <div className="home-top-child">
+          <div className="home-title">{track ? <span>Định vị realtime</span> : <span>Định vị mặc định</span>}</div>
+          <div className="home-control">
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={track}
+                onChange={() => {
+                  setTrack(!track);
+                }}
+              />
+              <span className="slider round"></span>
+            </label>
+          </div>
+        </div>
       </div>
       <div className="home-container">
         <div className="map">
@@ -312,10 +321,14 @@ const Home = () => {
               }}
             >
               <MdLocationPin className="pin" style={{ color: item.type === `Tag` ? `green` : `red` }} size={30} />
-              <p className="map-item-detail">{item.name}</p>
-
-              <p className="map-item-detail">{item.name}</p>
-              <p className="map-item-detail">{item.type}</p>
+              {item.userId ? (
+                <p className="map-item-detail">{item.userId.username}</p>
+              ) : (
+                <>
+                  <p className="map-item-detail">{item.name}</p>
+                  <p className="map-item-detail">{item.type}</p>
+                </>
+              )}
               <p className="map-item-detail">
                 x: {item.location.x}, y: {item.location.y}
               </p>
@@ -329,8 +342,17 @@ const Home = () => {
             >
               <MdLocationPin className="pin" style={{ color: 'yellow' }} size={30} />
               <p className="map-item-detail">{point.name}</p>
+              <p className="map-item-detail">
+                x: {point.x}, y: {point.y}
+              </p>
             </div>
           ))}
+          <div className="relative w-full h-full">
+            <svg className="absolute w-full h-full">
+              {/* Vùng cấm hiển thị bằng polygon */}
+              <polygon points={polygonPoints} fill="yellow" opacity="0.5" stroke="red" strokeWidth="2" />
+            </svg>
+          </div>
         </div>
         <div className="info">
           <h2>Tracking info</h2>

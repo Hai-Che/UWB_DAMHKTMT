@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
 import './users.scss';
+import { useEffect, useState } from 'react';
 import { GridColDef } from '@mui/x-data-grid';
+import { useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
 import React from 'react';
 import axios from 'axios';
 import * as actions from '../../redux/actions';
-import { useDispatch } from 'react-redux';
 import DataTableUser from '../../components/dataTableUser/DataTableUser';
+import Modal from 'react-modal';
+import apiRequest from '../../lib/apiRequest';
 
 const columns: GridColDef[] = [
   { field: '_id', headerName: 'ID', width: 220 },
@@ -32,7 +35,9 @@ const columns: GridColDef[] = [
     headerName: 'Device ID',
     width: 100,
     type: 'string'
-  }
+  },
+
+  { field: 'password', headerName: 'Password', width: 150, type: 'string' }
 ];
 
 interface User {
@@ -41,11 +46,55 @@ interface User {
   email: string;
   role: string;
   deviceId: string;
+  password: string;
 }
+
+const customStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)'
+  }
+};
 
 const Users = () => {
   const dispatch = useDispatch();
   const [data, setData] = useState<User[]>([]);
+  const [open, setOpen] = useState(false);
+  const [refresh, setRefresh] = useState(false);
+
+  const closeModal = () => {
+    setOpen(false);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const username = formData.get('username');
+    const email = formData.get('email');
+    const password = formData.get('password');
+    const role = formData.get('role');
+    dispatch(actions.controlLoading(true));
+    try {
+      await apiRequest.post('/auth/register', { username, email, password, role });
+      setRefresh(!refresh);
+      dispatch(actions.controlLoading(false));
+
+      toast.success('User has been added successfully', {
+        position: 'top-center',
+        autoClose: 2000
+      });
+      setTimeout(() => {
+        closeModal();
+      }, 3000);
+    } catch (error) {
+      dispatch(actions.controlLoading(false));
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
     dispatch(actions.controlLoading(true));
@@ -62,14 +111,44 @@ const Users = () => {
     };
 
     fetchData();
-  }, []);
+  }, [refresh]);
 
   return (
     <div className="products">
       <div className="info">
         <h1>Users</h1>
+        <button onClick={() => setOpen(true)}>Add new user</button>
       </div>
-      <DataTableUser slug="products" columns={columns} rows={data} />
+      <DataTableUser slug="products" columns={columns.filter((col) => col.field !== 'password')} rows={data} />
+      <Modal isOpen={open} onRequestClose={closeModal} contentLabel="Update Modal" style={customStyles}>
+        <div className="updateModal">
+          <h1>Add new user</h1>
+          <div className="form-update">
+            <span className="close" onClick={closeModal}>
+              X
+            </span>
+            <form onSubmit={handleSubmit}>
+              {columns
+                .filter((item) => item.field !== '_id' && item.field !== 'deviceId')
+                .map((column) => (
+                  <div className="item" key={column.field}>
+                    <label>{column.headerName}</label>
+                    {column.field === 'role' ? (
+                      <select id={column.field} name={column.field}>
+                        <option value="User">User</option>
+                        <option value="Admin">Admin</option>
+                      </select>
+                    ) : (
+                      <input type={column.type} id={column.field} name={column.field} placeholder={`Enter ${column.field}`} />
+                    )}
+                  </div>
+                ))}
+              <button>Send</button>
+            </form>
+            {/* <button onClick={closeModal}>Close</button> */}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

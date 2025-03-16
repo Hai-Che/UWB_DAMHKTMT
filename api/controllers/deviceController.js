@@ -2,12 +2,12 @@ import Device from '../models/Device.js';
 import { io } from '../index.js';
 
 export const getAllDevice = async (req, res) => {
-  const devices = await Device.find().lean();
+  const devices = await Device.find().populate('userId').lean();
   res.status(200).json(devices);
 };
 
 export const getAllTagDevice = async (req, res) => {
-  const devices = await Device.find({ type: 'Tag' }).lean();
+  const devices = await Device.find({ type: 'Tag', userId: { $eq: null } }).lean();
   res.status(200).json(devices);
 };
 

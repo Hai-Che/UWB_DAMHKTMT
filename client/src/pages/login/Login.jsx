@@ -1,15 +1,19 @@
 import './login.scss';
 import { Link, useNavigate } from 'react-router-dom';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import apiRequest from '../../lib/apiRequest';
 import { AuthContext } from '../../context/AuthContext';
 
 function Login() {
-  const { updateUser } = useContext(AuthContext);
+  const { currentUser, updateUser } = useContext(AuthContext);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/home');
+    }
+  }, [currentUser, navigate]);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
