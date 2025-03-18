@@ -41,10 +41,15 @@ io.on('connection', (socket) => {
     console.log('Received Anchor Data:', data);
 
     const { mac, data: locationData, operation_mode_data } = data;
-    const currentTime = moment().format('YYYY:MM:DD HH:mm:ss');
     try {
       await Location.create({
-        time: currentTime,
+        time: moment().format('YYYY:MM:DD HH:mm:ss'),
+        timestamp: {
+          day: moment().format('YYYY:MM:DD'),
+          week: moment().format('YYYY-WW'),
+          month: moment().format('YYYY:MM'),
+          year: moment().format('YYYY')
+        },
         macAddress: mac,
         location: {
           x: locationData.Position.X || 0,

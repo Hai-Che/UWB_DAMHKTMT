@@ -3,7 +3,7 @@
 .device-history {
   padding: 10px;
   font-family: Arial, sans-serif;
-  height: 100vh;
+  height: 100%;
   h2 {
     text-align: center;
     margin-bottom: 10px;
@@ -16,6 +16,8 @@
   }
 
   .device-card {
+    display: flex;
+    flex-direction: column;
     background: #f9f9f9;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -61,5 +63,52 @@
   &.error {
     color: red;
     font-weight: bold;
+  }
+  .h2-under {
+    margin-top: 30px;
+  }
+
+  .p-under {
+    display: flex;
+    background-color: $dark-color;
+    justify-content: center;
+    color: white;
+    // font-weight: bold;
+    border-radius: 4px;
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 5px;
+    border: none;
+    background-color: teal;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+
+    &:disabled {
+      background-color: #bed9d8;
+      cursor: not-allowed;
+    }
+  }
+
+  .button-top {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+  }
+
+  .img-plot {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-self: center;
+    background-color: white;
   }
 }

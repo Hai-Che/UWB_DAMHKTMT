@@ -23,10 +23,10 @@ const Home = () => {
   const prevLocationValidRef = useRef([]);
 
   const forbiddenZonePoints = [
-    { x: 2, y: 6, name: 'P1' },
-    { x: 2, y: 8, name: 'P2' },
-    { x: 4, y: 6, name: 'P3' },
-    { x: 4, y: 8, name: 'P4' }
+    { x: 10, y: 2, name: 'P1' },
+    { x: 10, y: 6, name: 'P2' },
+    { x: 14, y: 2, name: 'P3' },
+    { x: 14, y: 6, name: 'P4' }
   ];
 
   const polygonPoints = forbiddenZonePoints.map((point) => `${100 + point.x * scaleValue},${100 + point.y * scaleValue}`).join(' ');

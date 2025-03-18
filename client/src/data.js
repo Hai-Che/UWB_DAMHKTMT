@@ -25,7 +25,7 @@ export const menu = [
         id: 4,
         title: 'Location History',
         url: '/location-history',
-        icon: '/note.svg'
+        icon: '/chart.svg'
       }
     ]
   }

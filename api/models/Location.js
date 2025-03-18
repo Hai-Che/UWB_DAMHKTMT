@@ -5,6 +5,12 @@ const LocationSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+    timestamp: {
+      day: { type: String },
+      week: { type: String },
+      month: { type: String },
+      year: { type: String }
+    },
     macAddress: {
       type: String
     },

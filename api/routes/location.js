@@ -1,7 +1,9 @@
-import { Router } from "express";
-import { asyncHandler } from "../utils/asyncHandler.js";
-import { getAllLocation } from "../controllers/locationController.js";
+import { Router } from 'express';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { exportExcel, getAllLocation, exportScatterPlot } from '../controllers/locationController.js';
 const router = Router();
-router.get("/", asyncHandler(getAllLocation));
 
+router.post('/export-excel', asyncHandler(exportExcel));
+router.post('/export-scatter-plot', asyncHandler(exportScatterPlot));
+router.get('/', asyncHandler(getAllLocation));
 export default router;
