@@ -47,7 +47,7 @@ const DeviceHistory = () => {
           <div key={device._id} className="device-card">
             <h3>{device._id}</h3>
             <ul>
-              {device.locations.map((entry, index) => (
+              {device.locations.slice(0, 10).map((entry, index) => (
                 <li key={index} className="location-item">
                   <span className="time">{entry.time}</span>
                   <span className="coordinates">

@@ -18,6 +18,7 @@ import ProfilePage from './pages/profile/ProfilePage';
 import ProfileUpdatePage from './pages/profileUpdatePage/ProfileUpdatePage';
 import Users from './pages/users/Users';
 import DeviceLocations from './pages/locationHistory/LocationHistory';
+import Zones from './pages/zones/Zones';
 // import ThreeDRenderer from "./pages/threeTest/threeTest";
 
 const override = {
@@ -121,6 +122,10 @@ function App() {
         {
           path: '/location-history',
           element: <DeviceLocations />
+        },
+        {
+          path: '/zone',
+          element: <Zones />
         }
       ]
     }

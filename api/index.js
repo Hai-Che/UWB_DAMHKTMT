@@ -6,6 +6,8 @@ import deviceRoute from './routes/device.js';
 import locationRoute from './routes/location.js';
 import authRoute from './routes/auth.js';
 import userRoute from './routes/user.js';
+import zoneRoute from './routes/zone.js';
+import attendanceRoute from './routes/attendance.js';
 
 import http from 'http';
 import bodyParser from 'body-parser';
@@ -16,7 +18,7 @@ import { Server as SocketIOServer } from 'socket.io';
 
 import Device from './models/Device.js';
 import Location from './models/Location.js';
-import moment from 'moment/moment.js';
+import moment from 'moment';
 const app = express();
 const server = http.createServer(app);
 export const io = new SocketIOServer(server, { cors: { origin: '*' } });
@@ -43,11 +45,11 @@ io.on('connection', (socket) => {
     const { mac, data: locationData, operation_mode_data } = data;
     try {
       await Location.create({
-        time: moment().format('YYYY:MM:DD HH:mm:ss'),
+        time: moment().format('YYYY-MM-DD HH:mm:ss'),
         timestamp: {
-          day: moment().format('YYYY:MM:DD'),
+          day: moment().format('YYYY-MM-DD'),
           week: moment().format('YYYY-WW'),
-          month: moment().format('YYYY:MM'),
+          month: moment().format('YYYY-MM'),
           year: moment().format('YYYY')
         },
         macAddress: mac,
@@ -82,10 +84,16 @@ io.on('connection', (socket) => {
       return;
     }
     console.log('Tag Data:', data);
-    const currentTime = moment().format('YYYY:MM:DD HH:mm:ss');
+    const currentTime = moment().format('YYYY-MM-DD HH:mm:ss');
     try {
       await Location.create({
         time: currentTime,
+        timestamp: {
+          day: moment().format('YYYY-MM-DD'),
+          week: moment().format('YYYY-WW'),
+          month: moment().format('YYYY-MM'),
+          year: moment().format('YYYY')
+        },
         macAddress: data.mac,
         location: {
           x: data.data.Position.X || 0,
@@ -152,6 +160,8 @@ app.use('/api/auth', authRoute);
 app.use('/api/device', deviceRoute);
 app.use('/api/location', locationRoute);
 app.use('/api/users', userRoute);
+app.use('/api/zone', zoneRoute);
+app.use('/api/attendance', attendanceRoute);
 
 app.use((req, res, next) => {
   const error = new Error('Not found');

@@ -40,7 +40,7 @@ export const getAllLocation = async (req, res) => {
       {
         $project: {
           _id: 1,
-          locations: { $slice: ['$locations', 10] }
+          locations: { $slice: ['$locations', 500] }
         }
       }
     ]);

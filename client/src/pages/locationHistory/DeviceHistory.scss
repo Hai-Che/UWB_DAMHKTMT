@@ -86,7 +86,7 @@
     margin: 10px;
     border-radius: 5px;
     border: none;
-    background-color: teal;
+    background-color: $dark-color;
     color: white;
     font-weight: bold;
     cursor: pointer;
@@ -102,6 +102,10 @@
     align-items: center;
     justify-content: center;
     align-self: center;
+    button {
+      background-color: white;
+      color: $dark-color;
+    }
   }
 
   .img-plot {

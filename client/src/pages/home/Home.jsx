@@ -29,8 +29,6 @@ const Home = () => {
     { x: 14, y: 6, name: 'P4' }
   ];
 
-  const polygonPoints = forbiddenZonePoints.map((point) => `${100 + point.x * scaleValue},${100 + point.y * scaleValue}`).join(' ');
-
   function isPointInQuadrilateral(point, quad) {
     if (!point || !quad || quad.length !== 4) {
       console.warn('Dữ liệu không hợp lệ:', { point, quad });
@@ -279,14 +277,7 @@ const Home = () => {
           <div className="home-title">{showLines ? <span>Hiển thị đường nối</span> : <span>Ẩn đường nối</span>}</div>
           <div className="home-control">
             <label className="switch">
-              <input
-                type="checkbox"
-                checked={showLines}
-                onClick={toggleLines}
-                // onChange={() => {
-                //   setTrack(!track);
-                // }}
-              />
+              <input type="checkbox" checked={showLines} onClick={toggleLines} />
               <span className="slider round"></span>
             </label>
           </div>
@@ -347,12 +338,6 @@ const Home = () => {
               </p>
             </div>
           ))}
-          <div className="relative w-full h-full">
-            <svg className="absolute w-full h-full">
-              {/* Vùng cấm hiển thị bằng polygon */}
-              <polygon points={polygonPoints} fill="yellow" opacity="0.5" stroke="red" strokeWidth="2" />
-            </svg>
-          </div>
         </div>
         <div className="info">
           <h2>Tracking info</h2>

@@ -27,6 +27,12 @@ export const menu = [
         url: '/location-history',
         icon: '/chart.svg'
       }
+      // {
+      //   id: 5,
+      //   title: 'Zone',
+      //   url: '/zone',
+      //   icon: '/note.svg'
+      // }
     ]
   }
   // {
