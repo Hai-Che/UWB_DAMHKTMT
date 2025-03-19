@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { checkIn } from '../controllers/attendance.controller';
+import { checkIn, checkOut } from '../controllers/attendance.controller.js';
 
 const router = Router();
 
 router.post('/check-in', checkIn);
+router.post('/check-out', checkOut);
 
 export default router;

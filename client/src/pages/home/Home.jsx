@@ -128,10 +128,6 @@ const Home = () => {
   }, [track]);
 
   useEffect(() => {
-    // if (JSON.stringify(prevLocationValidRef.current) !== JSON.stringify(locationValid)) {
-    //   console.log('locationValid changed:', locationValid);
-    //   prevLocationValidRef.current = locationValid; // Cập nhật giá trị mới
-    // }
     const prevLocationValid = prevLocationValidRef.current;
     const changedItems = locationValid.filter((newItem) => {
       const oldItem = prevLocationValid.find((item) => item.macAddress === newItem.macAddress);
@@ -141,23 +137,46 @@ const Home = () => {
     if (changedItems.length > 0) {
       console.log('Các phần tử thay đổi:', changedItems);
       if (userTagData) {
-        console.log(userTagData);
-        userTagData.forEach((user) => {
-          const status = changedItems.find((item) => item.macAddress === user.deviceId.macAddress);
-          if (status && user.username) {
-            if (status.locationValid) {
-              toast.success(`${user.username} đang ở trong khu vực làm việc`, {
-                position: 'top-center',
-                autoClose: 2000
-              });
-            } else if (status.locationValid === false) {
-              toast.warn(`${user.username} đang ở ngoài khu vực làm việc`, {
-                position: 'top-center',
-                autoClose: 2000
-              });
+        const checkAndNotify = async () => {
+          for (const user of userTagData) {
+            const status = changedItems.find((item) => item.macAddress === user.deviceId.macAddress);
+            if (status && user.username) {
+              if (status.locationValid) {
+                try {
+                  const res = await checkIn(user.username, user.email);
+                  if (res && res.status === 200) {
+                    toast.success(res.data.message, {
+                      position: 'top-center',
+                      autoClose: 2000
+                    });
+                  }
+                } catch (error) {
+                  console.error('Check-in error:', error);
+                  toast.error('Check-in thất bại!');
+                }
+
+                toast.success(`${user.username} đang ở trong khu vực làm việc`, {
+                  position: 'top-center',
+                  autoClose: 2000
+                });
+              } else if (status.locationValid === false) {
+                const res = await checkOut(user.username, user.email);
+                if (res && res.status === 200) {
+                  toast.success(res.data.message, {
+                    position: 'top-center',
+                    autoClose: 2000
+                  });
+                }
+                toast.warn(`${user.username} đang ở ngoài khu vực làm việc`, {
+                  position: 'top-center',
+                  autoClose: 2000
+                });
+              }
             }
           }
-        });
+        };
+
+        checkAndNotify(); // Gọi hàm async
       }
       prevLocationValidRef.current = locationValid; // Cập nhật giá trị mới
     }
@@ -171,7 +190,6 @@ const Home = () => {
     });
 
     if (changedItems.length > 0) {
-      console.log('Các phần tử thay đổi:', changedItems);
       if (userTagData) {
         console.log(userTagData);
         userTagData.forEach((user) => {
@@ -222,6 +240,30 @@ const Home = () => {
       }
     } catch (error) {
       console.error('Lỗi cập nhật database:', error);
+    }
+  };
+
+  const checkIn = async (username, email) => {
+    try {
+      const res = await axios.post(`http://localhost:5000/api/attendance/check-in`, {
+        username,
+        email
+      });
+      return res;
+    } catch (error) {
+      console.error('Check in failed:', error);
+    }
+  };
+
+  const checkOut = async (username, email) => {
+    try {
+      const res = await axios.post(`http://localhost:5000/api/attendance/check-out`, {
+        username,
+        email
+      });
+      return res;
+    } catch (error) {
+      console.error('Check out failed:', error);
     }
   };
 
