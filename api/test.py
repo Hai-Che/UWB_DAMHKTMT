@@ -6,11 +6,11 @@ sio = socketio.Client()
 sio.connect('http://21.64.10.5:5000')
 
 mockData = {
-    'mac': 'EB:52:53:F5:D5:90',
+    'mac': 'E9:82:21:9E:C8:8F',
     'data': {     
         "Position": {
-            'X': 1,
-            'Y': 1,
+            'X': 3,
+            'Y': 3,
             'Z': 1.95
         },  
     }

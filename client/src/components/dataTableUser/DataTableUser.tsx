@@ -72,7 +72,7 @@ const DataTableUser = (props: Props) => {
     try {
       await apiRequest.delete(`/users/${_id}`);
       dispatch(actions.controlLoading(false));
-      toast.success('User has been deleted successfully', {
+      toast.success('Xóa người dùng thành công', {
         position: 'top-center',
         autoClose: 2000
       });
@@ -185,10 +185,6 @@ const DataTableUser = (props: Props) => {
                   {props.columns
                     .filter((item) => item.field !== '_id' && item.field !== 'role')
                     .map((column) => (
-                      // <div className="item" key={column.field}>
-                      //   <label>{column.headerName}</label>
-                      //   <input type={column.type} id={column.field} name={column.field} placeholder={`Enter ${column.field}`} />
-                      // </div>
                       <div className="item" key={column.field}>
                         <label>{column.headerName}</label>
                         {column.field !== 'deviceId' ? (
@@ -214,7 +210,6 @@ const DataTableUser = (props: Props) => {
                   <input type="hidden" id="_id" name="_id" value={selectedRow['_id']}></input>
                   <button>Send</button>
                 </form>
-                {/* <button onClick={closeModal}>Close</button> */}
               </div>
             )}
           </div>

@@ -66,7 +66,7 @@ const DataTable = (props: Props) => {
     try {
       await axios.delete(`http://localhost:5000/api/device/${macAddress}`);
       dispatch(actions.controlLoading(false));
-      toast.success('Device has been deleted successfully', {
+      toast.success('Thêm thiết bị thành công!', {
         position: 'top-center',
         autoClose: 2000
       });
@@ -75,7 +75,7 @@ const DataTable = (props: Props) => {
     } catch (error) {
       dispatch(actions.controlLoading(false));
       if (error.status === 403) {
-        toast.error('Không thể xóa thiết bị nếu không phải admin', {
+        toast.error('Không thể xóa thiết bị nếu không phải admin!', {
           position: 'top-center',
           autoClose: 2000
         });
@@ -92,7 +92,7 @@ const DataTable = (props: Props) => {
     try {
       const res = await axios.put(`http://localhost:5000/api/device`, inputs);
       dispatch(actions.controlLoading(false));
-      toast.success('Device has been updated successfully', {
+      toast.success('Cập nhật thiết bị thành công!', {
         position: 'top-center',
         autoClose: 2000
       });
