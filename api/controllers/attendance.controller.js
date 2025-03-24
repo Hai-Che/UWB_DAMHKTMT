@@ -81,3 +81,13 @@ export const checkOut = async (req, res) => {
     res.status(500).json({ message: 'Failed to check out' });
   }
 };
+
+export const getAll = async (req, res) => {
+  try {
+    const results = await Attendance.find().populate('userId').lean();
+    res.status(200).json(results);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to check out' });
+  }
+};

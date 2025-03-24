@@ -1,0 +1,56 @@
+@import '../../styles/variables.scss';
+
+.attendance-table {
+  width: 100%;
+  max-width: 1200px;
+  height: 100vh;
+  margin: auto;
+  border-radius: 8px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  h2 {
+    text-align: center;
+    margin-bottom: 10px;
+    color: $dark-color;
+    margin: 20px 0px;
+  }
+  .MuiTableHead-root {
+    color: $dark-color;
+
+    .MuiTableCell-head {
+      color: $dark-color;
+      font-weight: bold;
+      text-align: center;
+    }
+  }
+
+  .MuiTableBody-root {
+    .MuiTableRow-root {
+      &:nth-child(even) {
+        background-color: #f5f5f5;
+      }
+
+      &:hover {
+        background-color: #e3f2fd;
+      }
+
+      .MuiTableCell-root {
+        text-align: center;
+        padding: 12px;
+      }
+    }
+  }
+
+  .avatar-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .MuiAvatar-root {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #1976d2;
+    }
+  }
+}

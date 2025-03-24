@@ -19,6 +19,7 @@ import ProfileUpdatePage from './pages/profileUpdatePage/ProfileUpdatePage';
 import Users from './pages/users/Users';
 import DeviceLocations from './pages/locationHistory/LocationHistory';
 import Zones from './pages/zones/Zones';
+import Attendance from './pages/attendances/Attendances';
 // import ThreeDRenderer from "./pages/threeTest/threeTest";
 
 const override = {
@@ -126,6 +127,10 @@ function App() {
         {
           path: '/zone',
           element: <Zones />
+        },
+        {
+          path: '/attendance',
+          element: <Attendance />
         }
       ]
     }

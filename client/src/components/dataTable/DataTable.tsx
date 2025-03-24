@@ -74,6 +74,12 @@ const DataTable = (props: Props) => {
       console.log(data);
     } catch (error) {
       dispatch(actions.controlLoading(false));
+      if (error.status === 403) {
+        toast.error('Không thể xóa thiết bị nếu không phải admin', {
+          position: 'top-center',
+          autoClose: 2000
+        });
+      }
       console.log(error);
     }
   };
@@ -94,6 +100,12 @@ const DataTable = (props: Props) => {
       closeModal();
     } catch (error) {
       dispatch(actions.controlLoading(false));
+      if (error.status === 403) {
+        toast.error('Không thể cập nhật thiết bị nếu không phải admin', {
+          position: 'top-center',
+          autoClose: 2000
+        });
+      }
       console.log(error);
     }
   };

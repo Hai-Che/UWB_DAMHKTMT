@@ -79,6 +79,12 @@ const DataTableUser = (props: Props) => {
       setData((prevData) => prevData.filter((item) => item._id !== _id));
     } catch (error) {
       dispatch(actions.controlLoading(false));
+      if (error.status === 403) {
+        toast.error('Không thể xóa người dùng khác nếu không phải admin', {
+          position: 'top-center',
+          autoClose: 2000
+        });
+      }
       console.log(error);
     }
   };
@@ -93,7 +99,7 @@ const DataTableUser = (props: Props) => {
       dispatch(actions.controlLoading(false));
       setRefresh(!refresh);
 
-      toast.success('User has been updated successfully', {
+      toast.success('Cập nhật người dùng thành công', {
         position: 'top-center',
         autoClose: 2000
       });
@@ -101,6 +107,12 @@ const DataTableUser = (props: Props) => {
       closeModal();
     } catch (error) {
       dispatch(actions.controlLoading(false));
+      if (error.status === 403) {
+        toast.error('Không thể cập nhật người dùng khác nếu không phải admin', {
+          position: 'top-center',
+          autoClose: 2000
+        });
+      }
       console.log(error);
     }
   };

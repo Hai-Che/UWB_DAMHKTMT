@@ -25,6 +25,10 @@ export const updateDeviceLocation = async (req, res) => {
 
 export const updateDevice = async (req, res) => {
   try {
+    const role = req.role;
+    if (role !== 'Admin') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
     const { _id, ...others } = req.body;
     const othersArray = Object.entries(others);
     const filtered = othersArray.filter(([key, value]) => value !== '');
@@ -68,6 +72,10 @@ export const addDevice = async (req, res) => {
 };
 
 export const deleteDeviceByMacAddress = async (req, res) => {
+  const role = req.role;
+  if (role !== 'Admin') {
+    return res.status(403).json({ message: 'Not authorized' });
+  }
   await Device.findOneAndDelete({ macAddress: req.params.macAddress });
   res.status(200).json({ message: 'Delete successfully!' });
 };

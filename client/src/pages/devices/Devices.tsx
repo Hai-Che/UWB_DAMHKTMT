@@ -1,5 +1,5 @@
 import './devices.scss';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { GridColDef } from '@mui/x-data-grid';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -8,6 +8,7 @@ import Modal from 'react-modal';
 import React from 'react';
 import axios from 'axios';
 import * as actions from '../../redux/actions';
+import { AuthContext } from '../../context/AuthContext';
 
 const columns: GridColDef[] = [
   { field: '_id', headerName: 'ID', width: 220 },
@@ -79,6 +80,7 @@ interface Device {
 }
 
 const Devices = () => {
+  const { currentUser } = useContext(AuthContext);
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<Device[]>([]);
@@ -132,7 +134,7 @@ const Devices = () => {
     <div className="products">
       <div className="info">
         <h1>Devices</h1>
-        <button onClick={() => setOpen(true)}>Add new device</button>
+        {currentUser._doc.role === 'Admin' && <button onClick={() => setOpen(true)}>Add new device</button>}
       </div>
       <DataTable slug="products" columns={columns} rows={data} />
       <Modal isOpen={open} onRequestClose={closeModal} contentLabel="Update Modal" style={customStyles}>

@@ -26,6 +26,12 @@ export const menu = [
         title: 'Location History',
         url: '/location-history',
         icon: '/chart.svg'
+      },
+      {
+        id: 5,
+        title: 'Attendance',
+        url: '/attendance',
+        icon: '/note.svg'
       }
       // {
       //   id: 5,

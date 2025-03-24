@@ -43,7 +43,6 @@ export const updateUser = async (req, res) => {
   const tokenId = req.userId;
   const role = req.role;
   const { password, avatar, ...inputs } = req.body;
-  console.log(role);
   if (id !== tokenId && role !== 'Admin') {
     return res.status(403).json({ message: 'Not authorized' });
   }

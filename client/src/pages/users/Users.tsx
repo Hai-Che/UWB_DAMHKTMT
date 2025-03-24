@@ -1,5 +1,5 @@
 import './users.scss';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { GridColDef } from '@mui/x-data-grid';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -9,6 +9,7 @@ import * as actions from '../../redux/actions';
 import DataTableUser from '../../components/dataTableUser/DataTableUser';
 import Modal from 'react-modal';
 import apiRequest from '../../lib/apiRequest';
+import { AuthContext } from '../../context/AuthContext';
 
 const columns: GridColDef[] = [
   { field: '_id', headerName: 'ID', width: 220 },
@@ -65,6 +66,7 @@ const Users = () => {
   const [data, setData] = useState<User[]>([]);
   const [open, setOpen] = useState(false);
   const [refresh, setRefresh] = useState(false);
+  const { currentUser } = useContext(AuthContext);
 
   const closeModal = () => {
     setOpen(false);
@@ -92,6 +94,12 @@ const Users = () => {
       }, 3000);
     } catch (error) {
       dispatch(actions.controlLoading(false));
+      if (error.status === 403) {
+        toast.error('Không thể tạo người dùng khác nếu không phải admin', {
+          position: 'top-center',
+          autoClose: 2000
+        });
+      }
       console.log(error);
     }
   };
@@ -117,7 +125,7 @@ const Users = () => {
     <div className="products">
       <div className="info">
         <h1>Users</h1>
-        <button onClick={() => setOpen(true)}>Add new user</button>
+        {currentUser._doc.role === 'Admin' && <button onClick={() => setOpen(true)}>Add new user</button>}
       </div>
       <DataTableUser slug="products" columns={columns.filter((col) => col.field !== 'password')} rows={data} />
       <Modal isOpen={open} onRequestClose={closeModal} contentLabel="Update Modal" style={customStyles}>
