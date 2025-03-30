@@ -4,6 +4,41 @@
   padding: 10px;
   font-family: Arial, sans-serif;
   height: 100%;
+
+  .filter-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+
+    input[type='date'],
+    select {
+      padding: 8px 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    select {
+      appearance: none;
+      background: white;
+      cursor: pointer;
+    }
+
+    input[type='date']:hover,
+    select:hover {
+      border-color: #007bff;
+    }
+
+    input[type='date']:focus,
+    select:focus {
+      border-color: #0056b3;
+      box-shadow: 0 0 5px rgba(0, 91, 187, 0.5);
+    }
+  }
   h2 {
     text-align: center;
     margin-bottom: 10px;

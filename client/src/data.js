@@ -34,7 +34,7 @@ export const menu = [
         icon: '/note.svg'
       }
       // {
-      //   id: 5,
+      //   id: 6,
       //   title: 'Zone',
       //   url: '/zone',
       //   icon: '/note.svg'

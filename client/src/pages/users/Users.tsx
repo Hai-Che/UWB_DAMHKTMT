@@ -124,13 +124,13 @@ const Users = () => {
   return (
     <div className="products">
       <div className="info">
-        <h1>Users</h1>
-        {currentUser._doc.role === 'Admin' && <button onClick={() => setOpen(true)}>Add new user</button>}
+        <h1>Quản lý người dùng</h1>
+        {currentUser._doc.role === 'Admin' && <button onClick={() => setOpen(true)}>Thêm người dùng mới</button>}
       </div>
       <DataTableUser slug="products" columns={columns.filter((col) => col.field !== 'password')} rows={data} />
       <Modal isOpen={open} onRequestClose={closeModal} contentLabel="Update Modal" style={customStyles}>
         <div className="updateModal">
-          <h1>Add new user</h1>
+          <h1>Thêm người dùng mới</h1>
           <div className="form-update">
             <span className="close" onClick={closeModal}>
               X

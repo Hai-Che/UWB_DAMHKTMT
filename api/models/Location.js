@@ -9,7 +9,8 @@ const LocationSchema = new mongoose.Schema(
       day: { type: String },
       week: { type: String },
       month: { type: String },
-      year: { type: String }
+      year: { type: String },
+      time: { type: String }
     },
     macAddress: {
       type: String

@@ -7,6 +7,7 @@ import Modal from 'react-modal';
 import * as actions from '../../redux/actions';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
+import apiRequest from '../../lib/apiRequest';
 
 type Props = {
   columns: GridColDef[];
@@ -64,7 +65,8 @@ const DataTable = (props: Props) => {
   const handleDelete = async (macAddress: string) => {
     dispatch(actions.controlLoading(true));
     try {
-      await axios.delete(`http://localhost:5000/api/device/${macAddress}`);
+      await apiRequest.delete(`/device/${macAddress}`);
+
       dispatch(actions.controlLoading(false));
       toast.success('Thêm thiết bị thành công!', {
         position: 'top-center',
@@ -90,7 +92,8 @@ const DataTable = (props: Props) => {
     const inputs = Object.fromEntries(formData);
     dispatch(actions.controlLoading(true));
     try {
-      const res = await axios.put(`http://localhost:5000/api/device`, inputs);
+      const res = await apiRequest.put(`/device`, inputs);
+
       dispatch(actions.controlLoading(false));
       toast.success('Cập nhật thiết bị thành công!', {
         position: 'top-center',
@@ -180,38 +183,32 @@ const DataTable = (props: Props) => {
                   {props.columns
                     .filter((item) => item.field !== '_id' && item.field !== 'operationMode')
                     .map((column) => (
-                      // <div className="item">
-                      //   <label>{column.headerName}</label>
-                      //   <input
-                      //     type={column.type}
-                      //     id={column.field}
-                      //     name={column.field}
-                      //     placeholder={selectedRow[column.field]}
-                      //   />
-                      // </div>
                       <div className="item" key={column.field}>
                         <label>{column.headerName}</label>
                         {column.type === 'boolean' ? (
-                          <select id={column.field} name={column.field}>
-                            <option value="">Default</option>
+                          <select id={column.field} name={column.field} defaultValue={String(selectedRow[column.field])}>
                             <option value="false">False</option>
                             <option value="true">True</option>
                           </select>
                         ) : column.field === 'type' ? (
-                          <select id={column.field} name={column.field}>
-                            <option value="">Default</option>
+                          <select id={column.field} name={column.field} defaultValue={selectedRow[column.field]}>
                             <option value="Anchor">Anchor</option>
                             <option value="Tag">Tag</option>
                           </select>
                         ) : column.field === 'status' ? (
-                          <select id={column.field} name={column.field}>
-                            <option value="">Default</option>
+                          <select id={column.field} name={column.field} defaultValue={selectedRow[column.field]}>
                             <option value="active">Active</option>
                             <option value="passive">Passive</option>
                             <option value="off">Off</option>
                           </select>
                         ) : (
-                          <input type={column.type} id={column.field} name={column.field} placeholder={`Enter ${column.field}`} />
+                          <input
+                            type={column.type}
+                            id={column.field}
+                            name={column.field}
+                            placeholder={`Enter ${column.field}`}
+                            defaultValue={selectedRow[column.field]}
+                          />
                         )}
                       </div>
                     ))}

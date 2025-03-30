@@ -10,6 +10,7 @@ function calculateDistance(point1, point2) {
   const dx = point2.x - point1.x;
   const dy = point2.y - point1.y;
   return Math.floor(Math.sqrt(dx * dx + dy * dy));
+  // return Math.sqrt(dx * dx + dy * dy);
 }
 
 const width = 500;
@@ -21,11 +22,23 @@ const chartCallback = (ChartJS) => {
 const chartJSNodeCanvas = new ChartJSNodeCanvas({ width, height, chartCallback });
 
 export const getAllLocation = async (req, res) => {
+  let { date, time } = req.query;
   try {
+    if (!date) {
+      const latestLocation = await Location.findOne().sort({ createdAt: -1 });
+      if (latestLocation) {
+        date = latestLocation.timestamp.day.split(' ')[0]; // Lấy YYYY-MM-DD
+      } else {
+        return res.status(404).json({ error: 'Không có dữ liệu vị trí' });
+      }
+    }
+    let matchQuery = { 'timestamp.day': { $regex: `^${date}` } };
+    if (time) {
+      matchQuery['timestamp.time'] = { $regex: `^${time.split(':')[0]}:` }; // Lọc theo giờ (HH:)
+    }
     const locations = await Location.aggregate([
-      {
-        $sort: { time: -1 }
-      },
+      { $match: matchQuery },
+      { $sort: { createdAt: -1 } },
       {
         $group: {
           _id: '$macAddress',
@@ -40,7 +53,7 @@ export const getAllLocation = async (req, res) => {
       {
         $project: {
           _id: 1,
-          locations: { $slice: ['$locations', 500] }
+          locations: 1
         }
       }
     ]);
@@ -173,7 +186,7 @@ export const exportScatterPlot = async (req, res) => {
     const macAddress = req.body.macAddress;
     const result = await Location.aggregate([
       {
-        $sort: { time: -1 }
+        $sort: { createdAt: -1 }
       },
       {
         $lookup: {

@@ -44,13 +44,15 @@ io.on('connection', (socket) => {
 
     const { mac, data: locationData, operation_mode_data } = data;
     try {
+      const timeNow = moment();
       await Location.create({
-        time: moment().format('YYYY-MM-DD HH:mm:ss'),
+        time: timeNow.format('YYYY-MM-DD HH:mm:ss'),
         timestamp: {
-          day: moment().format('YYYY-MM-DD'),
-          week: moment().format('YYYY-WW'),
-          month: moment().format('YYYY-MM'),
-          year: moment().format('YYYY')
+          day: timeNow.format('YYYY-MM-DD'),
+          week: timeNow.format('YYYY-WW'),
+          month: timeNow.format('YYYY-MM'),
+          year: timeNow.format('YYYY'),
+          time: timeNow.format('HH:mm:ss')
         },
         macAddress: mac,
         location: {
@@ -84,15 +86,16 @@ io.on('connection', (socket) => {
       return;
     }
     console.log('Tag Data:', data);
-    const currentTime = moment().format('YYYY-MM-DD HH:mm:ss');
+    const timeNow = moment();
     try {
       await Location.create({
-        time: currentTime,
+        time: timeNow.format('YYYY-MM-DD HH:mm:ss'),
         timestamp: {
-          day: moment().format('YYYY-MM-DD'),
-          week: moment().format('YYYY-WW'),
-          month: moment().format('YYYY-MM'),
-          year: moment().format('YYYY')
+          day: timeNow.format('YYYY-MM-DD'),
+          week: timeNow.format('YYYY-WW'),
+          month: timeNow.format('YYYY-MM'),
+          year: timeNow.format('YYYY'),
+          time: timeNow.format('HH:mm:ss')
         },
         macAddress: data.mac,
         location: {

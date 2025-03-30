@@ -85,6 +85,13 @@ export const checkOut = async (req, res) => {
 export const getAll = async (req, res) => {
   try {
     const results = await Attendance.find().populate('userId').lean();
+    results.map((item) => {
+      if (item.workDuration) {
+        const diffHours = Math.floor(Math.abs(item.workDuration) / 60);
+        const remainingMinutes = Math.abs(item.workDuration) % 60;
+        item.workDuration = `${diffHours > 0 ? `${diffHours} giờ ${remainingMinutes} phút` : `${diffMinutes} phút`}`;
+      }
+    });
     res.status(200).json(results);
   } catch (error) {
     console.error(error);

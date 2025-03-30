@@ -11,6 +11,11 @@ export const getAllTagDevice = async (req, res) => {
   res.status(200).json(devices);
 };
 
+export const getAllAnchorDevice = async (req, res) => {
+  const devices = await Device.find({ type: 'Anchor' }).lean();
+  res.status(200).json(devices);
+};
+
 export const getDeviceByMacAddress = async (req, res) => {
   const device = await Device.findOne({ name: req.params.macAddress });
   res.status(200).json(device);
@@ -26,6 +31,7 @@ export const updateDeviceLocation = async (req, res) => {
 export const updateDevice = async (req, res) => {
   try {
     const role = req.role;
+    console.log(role);
     if (role !== 'Admin') {
       return res.status(403).json({ message: 'Not authorized' });
     }
@@ -41,7 +47,7 @@ export const updateDevice = async (req, res) => {
     if (filteredOthers.hasOwnProperty('ledStatus') && filteredOthers.ledStatus !== findDevice.ledStatus.toString()) {
       const ledBit = findDevice.ledStatus ? '0' : '1';
       operationMode = operationMode.substring(0, 5) + ledBit + operationMode.substring(6);
-      io.emit('updateOperationMode', { macAddress: findDevice.macAddress, operationMode });
+      // io.emit('updateOperationMode', { macAddress: findDevice.macAddress, operationMode });
     }
     if (filteredOthers.ledStatus) {
       filteredOthers.ledStatus = filteredOthers.ledStatus === 'true';
@@ -49,9 +55,6 @@ export const updateDevice = async (req, res) => {
     if (filteredOthers.isInitiator) {
       filteredOthers.isInitiator = filteredOthers.isInitiator === 'true';
     }
-    console.log('Update fields: ', filteredOthers);
-    console.log('Operation mode: ', operationMode);
-    console.log('Operation mode length: ', operationMode.length);
     const device = await Device.findByIdAndUpdate({ _id }, { ...filteredOthers, operationMode }, { new: true });
 
     res.status(200).json(device);
@@ -78,4 +81,25 @@ export const deleteDeviceByMacAddress = async (req, res) => {
   }
   await Device.findOneAndDelete({ macAddress: req.params.macAddress });
   res.status(200).json({ message: 'Delete successfully!' });
+};
+
+export const anchorSetUp = async (req, res) => {
+  const { updatedLocations } = req.body;
+  if (!Array.isArray(updatedLocations)) {
+    return res.status(400).json({ message: 'Invalid data format' });
+  }
+
+  updatedLocations.forEach(({ deviceName, x, y, z }) => {
+    io.emit('set_anchor_location', {
+      mac: deviceName,
+      data: {
+        x,
+        y,
+        z,
+        quality_factor: 100
+      }
+    });
+  });
+
+  res.status(200).json({ message: 'Update successfully!' });
 };
