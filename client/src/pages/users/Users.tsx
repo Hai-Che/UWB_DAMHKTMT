@@ -22,13 +22,13 @@ const columns: GridColDef[] = [
   {
     field: 'username',
     type: 'string',
-    headerName: 'Username',
-    width: 100
+    headerName: 'Tên đăng nhập',
+    width: 120
   },
   {
     field: 'role',
-    headerName: 'Role',
-    width: 100,
+    headerName: 'Quyền',
+    width: 80,
     type: 'string'
   },
   {

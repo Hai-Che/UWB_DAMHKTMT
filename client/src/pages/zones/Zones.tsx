@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { GridColDef } from '@mui/x-data-grid';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-// import DataTableZone from '../../components/dataTableZone/DataTableZone';
+import DataTableZone from '../../components/dataTableZone/DataTableZone';
 import Modal from 'react-modal';
 import React from 'react';
 import axios from 'axios';
@@ -12,10 +12,17 @@ import * as actions from '../../redux/actions';
 const columns: GridColDef[] = [
   { field: '_id', headerName: 'ID', width: 220 },
   {
-    field: 'deviceId',
-    headerName: 'Tên thiết bị anchor',
-    width: 100,
-    type: 'string'
+    field: 'name',
+    type: 'string',
+    headerName: 'Name',
+    width: 150
+  },
+  {
+    field: 'type',
+    headerName: 'Type',
+    type: 'singleSelect',
+    width: 130,
+    valueOptions: ['Forbidden', 'Work']
   }
 ];
 
@@ -30,87 +37,67 @@ const customStyles = {
   }
 };
 
-// interface Zone {
-//   _id: string;
-//   name: string;
-//   locations: { deviceName: ''; x: number; y: number; z: number }[];
-// }
+interface Zone {
+  _id: string;
+  name: string;
+  type: string;
+  locations: { x: number; y: number; z: number }[];
+}
 
 const Zones = () => {
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
-  // const [data, setData] = useState<Zone[]>([]);
-  const [anchorData, setAnchorData] = useState<any[]>([]);
+  const [data, setData] = useState<Zone[]>([]);
   const [refresh, setRefresh] = useState(false);
-  const [locations, setLocations] = useState<{ deviceName: string; x: number; y: number; z: number }[]>([]);
-  const [newPoint, setNewPoint] = useState({ deviceName: '', x: '', y: '', z: '' });
-  // const [newDevice, setNewDevice] = useState({ deviceName: '' });
+  const [locations, setLocations] = useState<{ x: number; y: number; z: number }[]>([]);
+  const [newPoint, setNewPoint] = useState({ x: '', y: '', z: '' });
 
   const closeModal = () => {
     setOpen(false);
     setLocations([]);
-    setNewPoint({ deviceName: '', x: '', y: '', z: '' });
+    setNewPoint({ x: '', y: '', z: '' });
   };
 
   useEffect(() => {
     dispatch(actions.controlLoading(true));
     const fetchData = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/device/get-anchors`);
-        if (Array.isArray(res.data)) {
-          setAnchorData(res.data);
-        } else {
-          setAnchorData([]);
-        }
+        const res = await axios.get(`http://localhost:5000/api/zone`);
+        console.log(res.data);
+        setData(res.data);
         dispatch(actions.controlLoading(false));
       } catch (err) {
         dispatch(actions.controlLoading(false));
         console.log(err);
       }
     };
-
     fetchData();
   }, [refresh]);
 
-  // useEffect(() => {
-  //   dispatch(actions.controlLoading(true));
-  //   const fetchData = async () => {
-  //     try {
-  //       const res = await axios.get(`http://localhost:5000/api/zone`);
-  //       console.log(res.data);
-  //       // setData(res.data);
-  //       dispatch(actions.controlLoading(false));
-  //     } catch (err) {
-  //       dispatch(actions.controlLoading(false));
-  //       console.log(err);
-  //     }
-  //   };
-  //   fetchData();
-  // }, [refresh]);
-
   const handleAddPoint = () => {
-    if (newPoint.deviceName && newPoint.x && newPoint.y && newPoint.z) {
-      setLocations([...locations, { deviceName: newPoint.deviceName, x: Number(newPoint.x), y: Number(newPoint.y), z: Number(newPoint.z) }]);
-      setNewPoint({ deviceName: '', x: '', y: '', z: '' });
-      // setNewDevice({ deviceName: '' });
+    if (newPoint.x && newPoint.y && newPoint.z) {
+      setLocations([...locations, { x: Number(newPoint.x), y: Number(newPoint.y), z: Number(newPoint.z) }]);
+      setNewPoint({ x: '', y: '', z: '' });
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const updatedLocations = locations.map((loc) => {
-      const matchedAnchor = anchorData.find((a) => a.name === loc.deviceName);
-      return {
-        ...loc,
-        deviceName: matchedAnchor ? matchedAnchor.macAddress : loc.deviceName // Thay bằng macAddress nếu tìm thấy
-      };
-    });
+    const formData = new FormData(e.target);
+    const inputs = Object.fromEntries(formData);
+
+    if (locations.length < 3) {
+      toast.error('Locations must have at least 3 points', { position: 'top-center', autoClose: 2000 });
+      return;
+    }
+
+    const newZone = { ...inputs, locations };
     dispatch(actions.controlLoading(true));
     try {
-      await axios.post(`http://localhost:5000/api/device/anchor-setup`, { updatedLocations });
+      await axios.post(`http://localhost:5000/api/zone/create`, newZone);
       setRefresh(!refresh);
       dispatch(actions.controlLoading(false));
-      toast.success('Khởi tạo vị trí anchor thành công!', { position: 'top-center', autoClose: 2000 });
+      toast.success('Zone has been added successfully', { position: 'top-center', autoClose: 2000 });
       setTimeout(() => {
         closeModal();
       }, 3000);
@@ -126,10 +113,10 @@ const Zones = () => {
         <h1>Zones</h1>
         <button onClick={() => setOpen(true)}>Add new zone</button>
       </div>
-      {/* <DataTableZone slug="products" columns={columns} rows={data} /> */}
+      <DataTableZone slug="products" columns={columns} rows={data} />
       <Modal isOpen={open} onRequestClose={closeModal} contentLabel="Update Modal" style={customStyles}>
         <div className="updateModal">
-          <h1>Setup tọa độ anchor</h1>
+          <h1>Add new zone</h1>
           <div className="form-update">
             <span className="close" onClick={closeModal}>
               X
@@ -140,52 +127,37 @@ const Zones = () => {
                 .map((column) => (
                   <div className="item" key={column.field}>
                     <label>{column.headerName}</label>
-                    {column.field !== 'deviceId' ? (
-                      <input type={column.type} id={column.field} name={column.field} placeholder={`Enter ${column.field}`} />
-                    ) : (
-                      <select
-                        id={column.field}
-                        name={column.field}
-                        defaultValue=""
-                        onChange={(e) => {
-                          const selectedDevice = e.target.value;
-                          setNewPoint((prev) => ({
-                            ...prev,
-                            deviceName: selectedDevice // Cập nhật deviceName vào newPoint
-                          }));
-                        }}
-                      >
-                        <option value="">Danh sách Anchor active</option>
-                        {anchorData.map((anchor) => (
-                          <option key={anchor} value={anchor?.name}>
-                            {anchor?.name}
-                          </option>
-                        ))}
+                    {column.field === 'type' ? (
+                      <select id={column.field} name={column.field}>
+                        <option value="Forbidden">Forbidden</option>
+                        <option value="Work">Work</option>
                       </select>
+                    ) : (
+                      <input type={column.type} id={column.field} name={column.field} placeholder={`Enter ${column.field}`} />
                     )}
                   </div>
                 ))}
               <div className="item">
-                <label>Tọa độ</label>
+                <label>Locations</label>
                 <div className="location-inputs">
                   <input type="number" placeholder="X" value={newPoint.x} onChange={(e) => setNewPoint({ ...newPoint, x: e.target.value })} />
                   <input type="number" placeholder="Y" value={newPoint.y} onChange={(e) => setNewPoint({ ...newPoint, y: e.target.value })} />
                   <input type="number" placeholder="Z" value={newPoint.z} onChange={(e) => setNewPoint({ ...newPoint, z: e.target.value })} />
                   <button className="add-point" type="button" onClick={handleAddPoint}>
-                    Thêm
+                    Add Point
                   </button>
                 </div>
               </div>
               <div className="item">
-                <label>Danh sách anchor setup</label>
+                <label>Points</label>
                 <ul className="locations-info">
                   {locations.map((loc, index) => (
-                    <li key={index}>{`${loc.deviceName} - (${loc.x}, ${loc.y}, ${loc.z})`}</li>
+                    <li key={index}>{`(${loc.x}, ${loc.y}, ${loc.z})`}</li>
                   ))}
                 </ul>
               </div>
 
-              <button>Gửi</button>
+              <button>Send</button>
             </form>
           </div>
         </div>

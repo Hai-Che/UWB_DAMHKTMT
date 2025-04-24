@@ -12,6 +12,15 @@ export const getUsers = async (req, res) => {
   }
 };
 
+export const getTagUsers = async (req, res) => {
+  try {
+    const users = await User.find({ deviceId: { $ne: null } });
+    res.status(200).json(users);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Failed to get all user' });
+  }
+};
 export const getUserByMacAddress = async (req, res) => {
   try {
     const { macAddress } = req.body;

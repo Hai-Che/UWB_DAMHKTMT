@@ -55,6 +55,11 @@ export const getAllLocation = async (req, res) => {
           _id: 1,
           locations: 1
         }
+      },
+      {
+        $sort: {
+          _id: 1
+        }
       }
     ]);
     const filteredLocations = await Promise.all(

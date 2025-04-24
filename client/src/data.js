@@ -5,31 +5,31 @@ export const menu = [
     listItems: [
       {
         id: 1,
-        title: 'Homepage',
+        title: 'Trang chủ',
         url: '/home',
-        icon: 'home.svg'
+        icon: '/home.svg'
       },
       {
         id: 2,
-        title: 'Devices',
+        title: 'Thiết bị',
         url: '/devices',
-        icon: 'element.svg'
+        icon: '/element.svg'
       },
       {
         id: 3,
-        title: 'Users',
+        title: 'Người dùng',
         url: '/users',
-        icon: 'note.svg'
+        icon: '/note.svg'
       },
       {
         id: 4,
-        title: 'Location History',
+        title: 'Lịch sử vị trí',
         url: '/location-history',
         icon: '/chart.svg'
       },
       {
         id: 5,
-        title: 'Attendance',
+        title: 'Quản lý chấm công',
         url: '/attendance',
         icon: '/note.svg'
       }

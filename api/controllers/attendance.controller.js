@@ -86,10 +86,10 @@ export const getAll = async (req, res) => {
   try {
     const results = await Attendance.find().populate('userId').lean();
     results.map((item) => {
-      if (item.workDuration) {
+      if (item?.workDuration) {
         const diffHours = Math.floor(Math.abs(item.workDuration) / 60);
         const remainingMinutes = Math.abs(item.workDuration) % 60;
-        item.workDuration = `${diffHours > 0 ? `${diffHours} giờ ${remainingMinutes} phút` : `${diffMinutes} phút`}`;
+        item.workDuration = `${diffHours > 0 ? `${diffHours} giờ ${remainingMinutes} phút` : `${remainingMinutes} phút`}`;
       }
     });
     res.status(200).json(results);

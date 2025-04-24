@@ -1,10 +1,10 @@
-import "./footer.scss";
+import './footer.scss';
 
 const Footer = () => {
   return (
     <div className="footer">
-      <span>Uwb localization</span>
-      <span>© HCMUT HK241</span>
+      <span>UWB Hệ thống giám sát nhân sự</span>
+      <span>© HCMUT HK242</span>
     </div>
   );
 };

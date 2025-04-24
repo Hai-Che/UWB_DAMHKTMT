@@ -11,41 +11,41 @@ import * as actions from '../../redux/actions';
 import { AuthContext } from '../../context/AuthContext';
 
 const columns: GridColDef[] = [
-  { field: '_id', headerName: 'ID', width: 220 },
+  { field: '_id', headerName: 'ID', width: 100 },
   {
     field: 'name',
     type: 'string',
-    headerName: 'Name',
-    width: 80
+    headerName: 'Tên thiết bị',
+    width: 100
   },
   {
     field: 'type',
-    headerName: 'Type',
+    headerName: 'Loại',
     width: 70,
     type: 'string'
   },
   {
     field: 'macAddress',
-    headerName: 'Mac address',
+    headerName: 'Địa chỉ MAC',
     width: 150,
     type: 'string'
   },
   {
     field: 'operationMode',
-    headerName: 'Device operation mode',
-    width: 160,
+    headerName: 'Operation mode',
+    width: 100,
     type: 'string'
   },
   {
     field: 'status',
-    headerName: 'Status',
-    width: 70,
+    headerName: 'Trạng thái',
+    width: 90,
     type: 'string'
   },
   {
     field: 'ledStatus',
     headerName: 'Led',
-    width: 70,
+    width: 10,
     type: 'boolean'
   },
   {

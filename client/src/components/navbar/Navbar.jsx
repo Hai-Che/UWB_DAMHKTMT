@@ -10,7 +10,7 @@ const Navbar = () => {
       <div className="left">
         <div className="logo">
           <img src="/hcmut.png" alt="" />
-          <span>UWB Indoor Localization</span>
+          <span>UWB Hệ thống giám sát nhân sự</span>
         </div>
       </div>
       <div className="right">
@@ -20,14 +20,14 @@ const Navbar = () => {
             <span>{currentUser._doc.username}</span>
             <Link to="/profile" className="profile">
               {/* {number > 0 && <div className="notification">{number}</div>} */}
-              <span>Profile</span>
+              <span>Thông tin cá nhân</span>
             </Link>
           </div>
         ) : (
           <>
-            <a href="/">Sign in</a>
+            <a href="/">Đăng nhập</a>
             <a href="/register" className="register">
-              Sign up
+              Đăng ký
             </a>
           </>
         )}

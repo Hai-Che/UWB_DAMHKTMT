@@ -21,9 +21,9 @@ function ProfilePage() {
       <div className="details">
         <div className="wrapper">
           <div className="title">
-            <h1>User Information</h1>
+            <h1>Thông tin người dùng</h1>
             <Link to="/profile/update">
-              <button>Update Profile</button>
+              <button>Cập nhật thông tin</button>
             </Link>
           </div>
           <div className="info">
@@ -32,12 +32,12 @@ function ProfilePage() {
               <img src={currentUser._doc.avatar || '/noavatar.jpg'} alt="" />
             </span>
             <span>
-              Username: <b>{currentUser._doc.username}</b>
+              Tên đăng nhập: <b>{currentUser._doc.username}</b>
             </span>
             <span>
-              E-mail: <b>{currentUser._doc.email}</b>
+              Email: <b>{currentUser._doc.email}</b>
             </span>
-            <button onClick={handleLogout}>Log out</button>
+            <button onClick={handleLogout}>Đăng xuất</button>
           </div>
         </div>
       </div>

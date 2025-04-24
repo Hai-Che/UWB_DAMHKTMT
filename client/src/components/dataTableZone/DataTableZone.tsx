@@ -91,7 +91,7 @@ const DataTable = (props: Props) => {
   const actionColumn: GridColDef = {
     field: 'action',
     headerName: 'Action',
-    width: 100,
+    width: 70,
     renderCell: (params) => {
       return (
         <div className="action">

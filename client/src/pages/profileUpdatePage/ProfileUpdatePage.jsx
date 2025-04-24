@@ -31,9 +31,9 @@ function ProfileUpdatePage() {
     <div className="profileUpdatePage">
       <div className="formContainer">
         <form onSubmit={handleSubmit}>
-          <h1>Update Profile</h1>
+          <h1>Cập nhật thông tin</h1>
           <div className="item">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="username">Tên đăng nhập</label>
             <input id="username" name="username" type="text" defaultValue={currentUser._doc.username} />
           </div>
           <div className="item">
@@ -41,11 +41,11 @@ function ProfileUpdatePage() {
             <input id="email" name="email" type="email" defaultValue={currentUser._doc.email} />
           </div>
           <div className="item">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">Mật khẩu</label>
             <input id="password" name="password" type="password" />
           </div>
           {error && <span>{error}</span>}
-          <button>Update</button>
+          <button>Cập nhật</button>
         </form>
       </div>
       <div className="sideContainer">

@@ -126,7 +126,9 @@ io.on('connection', (socket) => {
     io.emit('stop_tracking');
     console.log('Dừng tracking!');
   });
-
+  socket.on('speaker-forbidden', async (data) => {
+    io.emit('play_sound1', { msg: `Cảnh báo ${data.username} vào khu vực cấm`, level: 'urgent' });
+  });
   socket.on('disconnect', () => {
     console.log('disconnect');
   });
@@ -149,6 +151,23 @@ app.post('/api/send-alert-email', async (req, res) => {
     to: `${email}`,
     subject: 'Cảnh báo: Bạn đã tiến vào khu vực không được cho phép!',
     text: `Bạn đã vào khu vực không được cho phép tại tọa độ: x=${location.x}, y=${location.y}. Vui lòng rời khỏi khu vực này!`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: 'Email cảnh báo đã được gửi thành công' });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi gửi email', error });
+  }
+});
+
+app.post('/api/send-alert-emails', async (req, res) => {
+  const { email } = req.body;
+  const mailOptions = {
+    from: 'mocung9723@gmail.com',
+    to: `${email}`,
+    subject: 'Cảnh báo: Trường hợp khẩn cấp, vui lòng rời khỏi khu vực làm việc!',
+    text: `Trường hợp khẩn cấp, vui lòng rời khỏi khu vực làm việc!`
   };
 
   try {

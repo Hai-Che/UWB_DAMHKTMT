@@ -1,19 +1,39 @@
 import { useState, useEffect, useRef } from 'react';
-import { MdLocationPin } from 'react-icons/md';
+import { MdLocationPin, MdUpload } from 'react-icons/md';
 import './home.scss';
 import axios from 'axios';
 import io from 'socket.io-client';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-// import { Stage, Layer, Polygon } from 'react-konva';
+import apiRequest from '../../lib/apiRequest';
 const socket = io('http://localhost:5000');
-const scaleValue = 50;
+// const scaleValue = 30;
+// const scaleX = 146;
+// const scaleY = 30;
 const Home = () => {
+  const [scaleValue, setScaleValue] = useState(30);
+  const [scaleX, setScaleX] = useState(146);
+  const [scaleY, setScaleY] = useState(30);
+  const rowStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '0.5rem',
+    fontSize: '0.9rem' // chữ nhỏ hơn
+  };
+
+  const inputStyle = {
+    width: '50px', // input nhỏ gọn
+    padding: '1px', // giảm padding
+    fontSize: '0.85rem' // giảm cỡ chữ trong input
+  };
+
   const [data, setData] = useState([]);
   const [dataAnchor, setDataAnchor] = useState([]);
   const [showLines, setShowLines] = useState(false);
   const [userTagData, setUserTagData] = useState([]);
   const [locationValid, setLocationValid] = useState([]);
+  const [usersData, setUsersData] = useState([]);
   // const [forbiddenLocation, setForbiddenLocation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,12 +41,13 @@ const Home = () => {
   const latestDataRef = useRef([]);
   const latestAnchorRef = useRef([]);
   const prevLocationValidRef = useRef([]);
+  const [backgroundUrl, setBackgroundUrl] = useState(null);
 
   const forbiddenZonePoints = [
-    { x: 10, y: 2, name: 'P1' },
-    { x: 10, y: 6, name: 'P2' },
-    { x: 14, y: 2, name: 'P3' },
-    { x: 14, y: 6, name: 'P4' }
+    { x: 4, y: 0, name: 'P1' },
+    { x: 4, y: 2, name: 'P2' },
+    { x: 6, y: 0, name: 'P3' },
+    { x: 6, y: 2, name: 'P4' }
   ];
 
   function isPointInQuadrilateral(point, quad) {
@@ -57,6 +78,8 @@ const Home = () => {
   const fetchData = async () => {
     try {
       const res = await axios.get(`http://localhost:5000/api/device`); // Get all device
+      const usersRes = await axios.get(`http://localhost:5000/api/users/tag-user`);
+
       const devices = res.data.filter((item) => item.location);
       const anchors = devices.filter((item) => item.type === 'Anchor').map((item) => item.location);
       const tags = devices.filter((item) => item.type === 'Tag').map((item) => item.location);
@@ -73,7 +96,7 @@ const Home = () => {
       if (JSON.stringify(locationValid) !== JSON.stringify(locationStatus)) {
         setLocationValid(locationStatus);
       }
-
+      setUsersData(usersRes.data);
       setData(devices);
       setDataAnchor(anchors);
       latestDataRef.current = devices;
@@ -85,6 +108,7 @@ const Home = () => {
   };
   useEffect(() => {
     fetchData();
+    console.log(usersData);
   }, []);
 
   useEffect(() => {
@@ -92,6 +116,7 @@ const Home = () => {
       try {
         const userResponse = await axios.post('http://localhost:5000/api/users/get-user-by-mac', { macAddress });
         if (userResponse.data) {
+          console.log(userResponse.data);
           setUserTagData(userResponse.data); // Lưu thông tin user
         }
       } catch (error) {
@@ -154,7 +179,6 @@ const Home = () => {
                   console.error('Check-in error:', error);
                   toast.error('Check-in thất bại!');
                 }
-
                 toast.success(`${user.username} đang ở trong khu vực làm việc`, {
                   position: 'top-center',
                   autoClose: 2000
@@ -196,6 +220,7 @@ const Home = () => {
           const status = changedItems.find((item) => item.macAddress === user.deviceId.macAddress);
           if (status && user.username) {
             if (status.forbiddenLocation) {
+              socket.emit('speaker-forbidden', { username: user.username });
               toast.error(
                 `${user.username || 'Người dùng'} đang ở trong khu vực cấm. Email cảnh báo đã được gửi tới email ${user.email || 'người dùng'}`,
                 {
@@ -283,18 +308,18 @@ const Home = () => {
       latestDataRef.current
         .filter((item) => item.type !== 'Tag')
         .map((item, index) => {
-          const x1 = 100 + Math.round(tag.location.x * scaleValue);
-          const y1 = 100 + Math.round(tag.location.y * scaleValue);
-          const x2 = 100 + Math.round(item.location.x * scaleValue);
-          const y2 = 100 + Math.round(item.location.y * scaleValue);
+          const x1 = scaleX + Math.round(tag.location.x * scaleValue);
+          const y1 = scaleY + Math.round(tag.location.y * scaleValue);
+          const x2 = scaleX + Math.round(item.location.x * scaleValue);
+          const y2 = scaleY + Math.round(item.location.y * scaleValue);
           const midX = (x1 + x2) / 2;
           const midY = (y1 + y2) / 2;
           const distance = calculateDistance(x1, y1, x2, y2);
 
           return (
             <g key={`${tagIndex}-${index}`}>
-              <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="white" strokeDasharray="5,5" strokeWidth="2" />
-              <text x={midX} y={midY} textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="10">
+              <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="gray" strokeDasharray="5,5" strokeWidth="2" />
+              <text x={midX} y={midY} textAnchor="middle" dominantBaseline="middle" fill="black" fontSize="10">
                 {Math.round((distance / 100) * 100) / 100}
               </text>
             </g>
@@ -311,7 +336,98 @@ const Home = () => {
   //   if (!aPin) return null;
   //   return Math.sqrt(Math.pow(aPin.location.x - x, 2) + Math.pow(aPin.location.y - y, 2)).toFixed(2);
   // };
+  const handleEmergency = async () => {
+    try {
+      if (Array.isArray(usersData) && usersData.length > 0) {
+        toast.error(`Trường hợp khẩn cấp, đã gửi mail cảnh báo tới toàn bộ người dùng có gắn tag`, {
+          position: 'top-center',
+          autoClose: 2000
+        });
+        for (const user of usersData) {
+          try {
+            const response = await apiRequest.post('/send-alert-emails', {
+              email: user.email
+            });
+            console.log(`Email cảnh báo đã được gửi tới ${user.email}:`, response.data);
+          } catch (error) {
+            console.error(`Lỗi gửi email cảnh báo đến ${user.email}:`, error);
+          }
+        }
+      } else {
+        console.warn('Danh sách usersData rỗng hoặc không hợp lệ.');
+      }
+    } catch (error) {
+      console.log('Lỗi tổng thể trong handleEmergency:', error);
+    }
+  };
 
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setBackgroundUrl(imageUrl);
+    }
+  };
+
+  const MapComponent = ({ backgroundUrl }) => {
+    return (
+      <div
+        className="map"
+        style={{
+          position: 'relative',
+          backgroundImage: `url(${backgroundUrl})`,
+          backgroundSize: 'cover', // Thay vì 'contain', dùng 'cover' để ảnh phủ đầy thẻ mà không bị bóp méo
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          width: '100%',
+          height: '100%'
+        }}
+      >
+        <svg className="map-svg">{getLines()}</svg>
+        {latestDataRef.current.map((item, index) => (
+          <div
+            key={index}
+            className="map-item"
+            style={{
+              position: 'absolute',
+              left: `${scaleX + item.location.x * scaleValue}px`,
+              top: `${scaleY + item.location.y * scaleValue}px`
+            }}
+          >
+            <MdLocationPin className="pin" style={{ color: item.type === 'Tag' ? 'green' : 'red' }} size={30} />
+            {item.userId ? (
+              <p className="map-item-detail">{item.userId.username}</p>
+            ) : (
+              <>
+                <p className="map-item-detail">{item.name}</p>
+                <p className="map-item-detail">{item.type}</p>
+              </>
+            )}
+            <p className="map-item-detail">
+              x: {item.location.x}, y: {item.location.y}
+            </p>
+          </div>
+        ))}
+        {forbiddenZonePoints.map((point, index) => (
+          <div
+            key={index}
+            className="map-item fixed"
+            style={{
+              position: 'absolute',
+              left: `${scaleX + point.x * scaleValue}px`,
+              top: `${scaleY + point.y * scaleValue}px`
+            }}
+          >
+            <MdLocationPin className="pin" style={{ color: 'yellow' }} size={30} />
+            <p className="map-item-detail">{point.name}</p>
+            <p className="map-item-detail">
+              x: {point.x}, y: {point.y}
+            </p>
+          </div>
+        ))}
+      </div>
+    );
+  };
   return (
     <div className="home">
       <div className="home-top">
@@ -340,49 +456,31 @@ const Home = () => {
           </div>
         </div>
       </div>
+      <div style={{ position: 'relative', zIndex: 10 }}>
+        {/* <button style={{ position: 'relative' }}>
+          Upload Background
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              opacity: 0,
+              cursor: 'pointer'
+            }}
+          />
+        </button> */}
+      </div>
       <div className="home-container">
-        <div className="map">
-          <svg className="map-svg">{getLines()}</svg>
-          {latestDataRef.current.map((item, index) => (
-            <div
-              key={index}
-              className="map-item"
-              style={{
-                position: 'absolute',
-                left: `${100 + item.location.x * scaleValue}px`,
-                top: `${100 + item.location.y * scaleValue}px`
-              }}
-            >
-              <MdLocationPin className="pin" style={{ color: item.type === `Tag` ? `green` : `red` }} size={30} />
-              {item.userId ? (
-                <p className="map-item-detail">{item.userId.username}</p>
-              ) : (
-                <>
-                  <p className="map-item-detail">{item.name}</p>
-                  <p className="map-item-detail">{item.type}</p>
-                </>
-              )}
-              <p className="map-item-detail">
-                x: {item.location.x}, y: {item.location.y}
-              </p>
-            </div>
-          ))}
-          {forbiddenZonePoints.map((point, index) => (
-            <div
-              key={index}
-              className="map-item fixed"
-              style={{ position: 'absolute', left: `${100 + point.x * scaleValue}px`, top: `${100 + point.y * scaleValue}px` }}
-            >
-              <MdLocationPin className="pin" style={{ color: 'yellow' }} size={30} />
-              <p className="map-item-detail">{point.name}</p>
-              <p className="map-item-detail">
-                x: {point.x}, y: {point.y}
-              </p>
-            </div>
-          ))}
-        </div>
+        <>
+          <MapComponent backgroundUrl={backgroundUrl} />
+        </>
         <div className="info">
-          <h2>Tracking info</h2>
+          <h2>Dữ liệu vị trí</h2>
           <div className="list">
             {latestDataRef.current.map((item, index) => (
               <div key={index} className="list-item">
@@ -420,6 +518,28 @@ const Home = () => {
               </div>
             ))}
           </div> */}
+          <div style={{ padding: '1rem' }}>
+            <div style={rowStyle}>
+              <label htmlFor="scaleValue">Scale Value:</label>
+              <input id="scaleValue" type="number" value={scaleValue} onChange={(e) => setScaleValue(Number(e.target.value))} style={inputStyle} />
+            </div>
+            <div style={rowStyle}>
+              <label htmlFor="scaleX">Scale X:</label>
+              <input id="scaleX" type="number" value={scaleX} onChange={(e) => setScaleX(Number(e.target.value))} style={inputStyle} />
+            </div>
+            <div style={rowStyle}>
+              <label htmlFor="scaleY">Scale Y:</label>
+              <input id="scaleY" type="number" value={scaleY} onChange={(e) => setScaleY(Number(e.target.value))} style={inputStyle} />
+            </div>
+          </div>
+          <button className="emergency-btn" onClick={handleEmergency}>
+            Khẩn cấp
+          </button>
+          <p className="title-upload">Tải bản đồ</p>
+          <label className="upload-label">
+            <MdUpload size={30} color="white" />
+            <input type="file" accept="image/*" onChange={handleImageUpload} className="upload-input" />
+          </label>
         </div>
       </div>
     </div>
