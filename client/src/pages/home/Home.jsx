@@ -8,9 +8,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import apiRequest from '../../lib/apiRequest';
 const socket = io('http://localhost:5000');
 const Home = () => {
-  const [scaleValue, setScaleValue] = useState(39.2);
-  const [scaleX, setScaleX] = useState(115);
-  const [scaleY, setScaleY] = useState(35);
+  const [scaleValue, setScaleValue] = useState(0);
+  const [scaleX, setScaleX] = useState(0);
+  const [scaleY, setScaleY] = useState(0);
+
   const rowStyle = {
     display: 'flex',
     alignItems: 'center',
@@ -39,6 +40,7 @@ const Home = () => {
   const latestAnchorRef = useRef([]);
   const prevLocationValidRef = useRef([]);
   const [backgroundUrl, setBackgroundUrl] = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
   const forbiddenZonePoints = [
     { x: 3, y: 0, name: 'P1' },
@@ -76,7 +78,11 @@ const Home = () => {
     try {
       const res = await axios.get(`http://localhost:5000/api/device`); // Get all device
       const usersRes = await axios.get(`http://localhost:5000/api/users/tag-user`);
-
+      const userSettingRes = await apiRequest.get(`/setting`);
+      const setting = userSettingRes.data;
+      setScaleValue(setting.scaleValue);
+      setScaleX(setting.scaleX);
+      setScaleY(setting.scaleY);
       const devices = res.data.filter((item) => item.location);
       const anchors = devices.filter((item) => item.type === 'Anchor').map((item) => item.location);
       const tags = devices.filter((item) => item.type === 'Tag').map((item) => item.location);
@@ -105,8 +111,23 @@ const Home = () => {
   };
   useEffect(() => {
     fetchData();
-    console.log(usersData);
   }, []);
+
+  const handleSubmit = async () => {
+    const input = { scaleValue, scaleX, scaleY };
+    try {
+      const settingResponse = await apiRequest.post('/setting', input);
+      if (settingResponse?.data) {
+        console.log(settingResponse?.data);
+        setScaleValue(settingResponse.data.data.scaleValue);
+        setScaleX(settingResponse.data.data.scaleX);
+        setScaleY(settingResponse.data.data.scaleY);
+      }
+      setShowForm(false);
+    } catch (error) {
+      console.error('Failed to submit setting:', error);
+    }
+  };
 
   useEffect(() => {
     socket.on('updateData', async ({ macAddress, transferData }) => {
@@ -520,20 +541,42 @@ const Home = () => {
               </div>
             ))}
           </div> */}
-          {/* <div style={{ padding: '1rem' }}>
-            <div style={rowStyle}>
-              <label htmlFor="scaleValue">Scale Value:</label>
-              <input id="scaleValue" type="number" value={scaleValue} onChange={(e) => setScaleValue(Number(e.target.value))} style={inputStyle} />
-            </div>
-            <div style={rowStyle}>
-              <label htmlFor="scaleX">Scale X:</label>
-              <input id="scaleX" type="number" value={scaleX} onChange={(e) => setScaleX(Number(e.target.value))} style={inputStyle} />
-            </div>
-            <div style={rowStyle}>
-              <label htmlFor="scaleY">Scale Y:</label>
-              <input id="scaleY" type="number" value={scaleY} onChange={(e) => setScaleY(Number(e.target.value))} style={inputStyle} />
-            </div>
-          </div> */}
+          <div>
+            {!showForm ? (
+              <button className="scale-btn" onClick={() => setShowForm(true)}>
+                Scale anchor
+              </button>
+            ) : (
+              <>
+                <div style={rowStyle}>
+                  <label htmlFor="scaleValue">Giá trị scale:</label>
+                  <input
+                    id="scaleValue"
+                    type="number"
+                    value={scaleValue}
+                    onChange={(e) => setScaleValue(Number(e.target.value))}
+                    style={inputStyle}
+                  />
+                </div>
+                <div style={rowStyle}>
+                  <label htmlFor="scaleX">Scale X:</label>
+                  <input id="scaleX" type="number" value={scaleX} onChange={(e) => setScaleX(Number(e.target.value))} style={inputStyle} />
+                </div>
+                <div style={rowStyle}>
+                  <label htmlFor="scaleY">Scale Y:</label>
+                  <input id="scaleY" type="number" value={scaleY} onChange={(e) => setScaleY(Number(e.target.value))} style={inputStyle} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <button className="scale-btn-child" onClick={handleSubmit}>
+                    Lưu cài đặt
+                  </button>
+                  <button className="scale-btn-child" onClick={() => setShowForm(false)}>
+                    Hủy
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           <button className="emergency-btn" onClick={handleEmergency}>
             Khẩn cấp
           </button>

@@ -154,6 +154,44 @@
       justify-content: center;
       align-items: center;
     }
+    .scale-btn {
+      margin-top: 10px;
+      margin-left: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      align-self: center;
+      width: 100px;
+      padding: 6px;
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      border: none;
+      background-color: white;
+      color: $dark-color;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    .scale-btn-child {
+      margin-top: 10px;
+      margin-left: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      align-self: center;
+      width: 100px;
+      padding: 6px;
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      border: none;
+      background-color: white;
+      color: $dark-color;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
     .emergency-btn {
       margin-top: 10px;
       // margin-left: 25px;
