@@ -85,12 +85,12 @@ const DeviceHistory = () => {
           </div>
         ))}
       </div>
-      <h2 className="h2-under">Khoảng cách di chuyển được mỗi Tag</h2>
+      <h2 className="h2-under">Quãng đường di chuyển được mỗi Tag</h2>
       <div className="device-grid">
         {devices.map((device) => (
           <div key={device._id} className="device-card">
             <h3>{device._id}</h3>
-            <p className="p-under">{distances[device._id] || '0'} m</p>
+            {/* <p className="p-under">{distances[device._id] || '0'} m</p> */}
             <button onClick={() => handleExport(device._id)}>Vẽ quãng đường di chuyển</button>
           </div>
         ))}

@@ -258,8 +258,8 @@ export const exportScatterPlot = async (req, res) => {
       },
       options: {
         scales: {
-          x: { min: -2, max: 15 },
-          y: { min: -2, max: 15 }
+          x: { min: -5, max: 20 },
+          y: { min: -5, max: 20 }
         }
       }
     };

@@ -129,6 +129,13 @@ io.on('connection', (socket) => {
   socket.on('speaker-forbidden', async (data) => {
     io.emit('play_sound1', { msg: `Cảnh báo ${data.username} vào khu vực cấm`, level: 'urgent' });
   });
+  socket.on('speaker-checkin', async (data) => {
+    // io.emit('play_sound1', { msg: `${data.message}`, level: 'normal' });
+    io.emit('play_sound1', { msg: `Người dùng ${data.username} đã check in thành công`, level: 'normal' });
+  });
+  socket.on('speaker-checkout', async (data) => {
+    io.emit('play_sound1', { msg: `Người dùng ${data.username} đã check out thành công`, level: 'normal' });
+  });
   socket.on('disconnect', () => {
     console.log('disconnect');
   });

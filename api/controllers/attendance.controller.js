@@ -70,6 +70,7 @@ export const checkOut = async (req, res) => {
 
     attendance.checkOut = timeNow.format('YYYY-MM-DD HH:mm:ss');
     attendance.workDuration = workDuration;
+    if (attendance.status === 'Present') attendance.status = 'Done';
     await attendance.save();
 
     res.status(200).json({
@@ -84,7 +85,7 @@ export const checkOut = async (req, res) => {
 
 export const getAll = async (req, res) => {
   try {
-    const results = await Attendance.find().populate('userId').lean();
+    const results = await Attendance.find().sort({ createdAt: -1 }).limit(8).populate('userId').lean();
     results.map((item) => {
       if (item?.workDuration) {
         const diffHours = Math.floor(Math.abs(item.workDuration) / 60);

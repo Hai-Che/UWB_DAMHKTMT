@@ -7,13 +7,10 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import apiRequest from '../../lib/apiRequest';
 const socket = io('http://localhost:5000');
-// const scaleValue = 30;
-// const scaleX = 146;
-// const scaleY = 30;
 const Home = () => {
-  const [scaleValue, setScaleValue] = useState(30);
-  const [scaleX, setScaleX] = useState(146);
-  const [scaleY, setScaleY] = useState(30);
+  const [scaleValue, setScaleValue] = useState(39.2);
+  const [scaleX, setScaleX] = useState(115);
+  const [scaleY, setScaleY] = useState(35);
   const rowStyle = {
     display: 'flex',
     alignItems: 'center',
@@ -44,10 +41,10 @@ const Home = () => {
   const [backgroundUrl, setBackgroundUrl] = useState(null);
 
   const forbiddenZonePoints = [
-    { x: 4, y: 0, name: 'P1' },
-    { x: 4, y: 2, name: 'P2' },
-    { x: 6, y: 0, name: 'P3' },
-    { x: 6, y: 2, name: 'P4' }
+    { x: 3, y: 0, name: 'P1' },
+    { x: 3, y: 2, name: 'P2' },
+    { x: 5, y: 0, name: 'P3' },
+    { x: 5, y: 2, name: 'P4' }
   ];
 
   function isPointInQuadrilateral(point, quad) {
@@ -170,6 +167,7 @@ const Home = () => {
                 try {
                   const res = await checkIn(user.username, user.email);
                   if (res && res.status === 200) {
+                    // socket.emit('speaker-checkin', { username: user.username, message: res.data.message });
                     toast.success(res.data.message, {
                       position: 'top-center',
                       autoClose: 2000
@@ -186,6 +184,7 @@ const Home = () => {
               } else if (status.locationValid === false) {
                 const res = await checkOut(user.username, user.email);
                 if (res && res.status === 200) {
+                  // socket.emit('speaker-checkout', { username: user.username, message: res.data.message });
                   toast.success(res.data.message, {
                     position: 'top-center',
                     autoClose: 2000
@@ -314,13 +313,14 @@ const Home = () => {
           const y2 = scaleY + Math.round(item.location.y * scaleValue);
           const midX = (x1 + x2) / 2;
           const midY = (y1 + y2) / 2;
-          const distance = calculateDistance(x1, y1, x2, y2);
-
+          console.log(x1, y1, x2, y2);
+          const distance = calculateDistance(tag.location.x, tag.location.y, item.location.x, item.location.y);
+          console.log(distance);
           return (
             <g key={`${tagIndex}-${index}`}>
               <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="gray" strokeDasharray="5,5" strokeWidth="2" />
               <text x={midX} y={midY} textAnchor="middle" dominantBaseline="middle" fill="black" fontSize="10">
-                {Math.round((distance / 100) * 100) / 100}
+                {Math.round(distance * 100) / 100}
               </text>
             </g>
           );
@@ -375,7 +375,9 @@ const Home = () => {
         className="map"
         style={{
           position: 'relative',
-          backgroundImage: `url(${backgroundUrl})`,
+          // backgroundImage: `url(${backgroundUrl})`,
+          // backgroundImage: `url(../../../public/map.jpg)`,
+          backgroundImage: `url(/map.jpg)`,
           backgroundSize: 'cover', // Thay vì 'contain', dùng 'cover' để ảnh phủ đầy thẻ mà không bị bóp méo
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -518,7 +520,7 @@ const Home = () => {
               </div>
             ))}
           </div> */}
-          <div style={{ padding: '1rem' }}>
+          {/* <div style={{ padding: '1rem' }}>
             <div style={rowStyle}>
               <label htmlFor="scaleValue">Scale Value:</label>
               <input id="scaleValue" type="number" value={scaleValue} onChange={(e) => setScaleValue(Number(e.target.value))} style={inputStyle} />
@@ -531,15 +533,15 @@ const Home = () => {
               <label htmlFor="scaleY">Scale Y:</label>
               <input id="scaleY" type="number" value={scaleY} onChange={(e) => setScaleY(Number(e.target.value))} style={inputStyle} />
             </div>
-          </div>
+          </div> */}
           <button className="emergency-btn" onClick={handleEmergency}>
             Khẩn cấp
           </button>
-          <p className="title-upload">Tải bản đồ</p>
+          {/* <p className="title-upload">Tải bản đồ</p>
           <label className="upload-label">
             <MdUpload size={30} color="white" />
             <input type="file" accept="image/*" onChange={handleImageUpload} className="upload-input" />
-          </label>
+          </label> */}
         </div>
       </div>
     </div>
