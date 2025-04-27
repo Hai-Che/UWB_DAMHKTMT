@@ -8,6 +8,7 @@ import authRoute from './routes/auth.js';
 import userRoute from './routes/user.js';
 import zoneRoute from './routes/zone.js';
 import attendanceRoute from './routes/attendance.js';
+import settingRoute from './routes/setting.js';
 
 import http from 'http';
 import bodyParser from 'body-parser';
@@ -191,6 +192,7 @@ app.use('/api/location', locationRoute);
 app.use('/api/users', userRoute);
 app.use('/api/zone', zoneRoute);
 app.use('/api/attendance', attendanceRoute);
+app.use('/api/setting', settingRoute);
 
 app.use((req, res, next) => {
   const error = new Error('Not found');

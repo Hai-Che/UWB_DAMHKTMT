@@ -7,28 +7,30 @@
 
 .home-top {
   display: flex;
+  // position: fixed;
+  // top: 10px;
 }
 
 .home-title {
   margin-top: 5px;
-  height: 20px;
+  // height: 20px;
   display: flex;
   justify-content: center;
-  margin-left: 60px;
+  // margin-left: 150px;
 }
 
 .home-control {
-  margin-left: 60px;
+  // margin-left: 150px;
   display: flex;
   padding-bottom: 5px;
   justify-content: center;
-  --switch-height: 30px;
+  --switch-height: 25px;
   --switch-padding: 8px;
   --switch-width: calc((var(--switch-height) * 2) - var(--switch-padding));
   --slider-height: calc(var(--switch-height) - var(--switch-padding));
   --slider-on: calc(var(--switch-height) - var(--switch-padding));
   .switch {
-    margin: 0px 150px;
+    margin: 0px 5px;
     position: relative;
     display: inline-block;
     width: var(--switch-width);
@@ -154,16 +156,22 @@
       justify-content: center;
       align-items: center;
     }
+    .wrap-all {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
     .scale-btn {
-      margin-top: 10px;
-      margin-left: 30px;
+      margin-top: 5px;
+      // margin-left: 30px;
       display: flex;
       align-items: center;
       justify-content: center;
       align-self: center;
       width: 100px;
       padding: 6px;
-      font-size: 10px;
+      font-size: 8px;
       font-weight: bold;
       text-transform: uppercase;
       border: none;
@@ -174,13 +182,12 @@
     }
 
     .scale-btn-child {
-      margin-top: 10px;
-      margin-left: 10px;
       display: flex;
+      margin: '0px 10px';
       align-items: center;
       justify-content: center;
       align-self: center;
-      width: 100px;
+      width: 50px;
       padding: 6px;
       font-size: 10px;
       font-weight: bold;
@@ -195,7 +202,7 @@
     .emergency-btn {
       margin-top: 10px;
       // margin-left: 25px;
-      margin-left: 30px;
+      // margin-left: 30px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -240,7 +247,7 @@
     position: relative;
     display: inline-block;
     cursor: pointer;
-    margin-left: 65px;
+    // margin-left: 65px;
   }
 
   .upload-label input[type='file'] {
@@ -277,7 +284,7 @@
   }
 
   .info-item-detail span {
-    margin-bottom: 4px;
-    font-size: 14px;
+    margin-bottom: 2px;
+    font-size: 12px;
   }
 }

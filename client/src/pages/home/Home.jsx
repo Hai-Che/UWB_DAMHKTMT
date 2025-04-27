@@ -44,9 +44,9 @@ const Home = () => {
 
   const forbiddenZonePoints = [
     { x: 3, y: 0, name: 'P1' },
-    { x: 3, y: 2, name: 'P2' },
     { x: 5, y: 0, name: 'P3' },
-    { x: 5, y: 2, name: 'P4' }
+    { x: 5, y: 2, name: 'P4' },
+    { x: 3, y: 2, name: 'P2' }
   ];
 
   function isPointInQuadrilateral(point, quad) {
@@ -83,6 +83,7 @@ const Home = () => {
       setScaleValue(setting.scaleValue);
       setScaleX(setting.scaleX);
       setScaleY(setting.scaleY);
+      setBackgroundUrl(setting.mapImage);
       const devices = res.data.filter((item) => item.location);
       const anchors = devices.filter((item) => item.type === 'Anchor').map((item) => item.location);
       const tags = devices.filter((item) => item.type === 'Tag').map((item) => item.location);
@@ -122,6 +123,7 @@ const Home = () => {
         setScaleValue(settingResponse.data.data.scaleValue);
         setScaleX(settingResponse.data.data.scaleX);
         setScaleY(settingResponse.data.data.scaleY);
+        if (settingResponse.data.data?.mapImage) setBackgroundUrl(settingResponse.data.data?.mapImage);
       }
       setShowForm(false);
     } catch (error) {
@@ -334,9 +336,7 @@ const Home = () => {
           const y2 = scaleY + Math.round(item.location.y * scaleValue);
           const midX = (x1 + x2) / 2;
           const midY = (y1 + y2) / 2;
-          console.log(x1, y1, x2, y2);
           const distance = calculateDistance(tag.location.x, tag.location.y, item.location.x, item.location.y);
-          console.log(distance);
           return (
             <g key={`${tagIndex}-${index}`}>
               <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="gray" strokeDasharray="5,5" strokeWidth="2" />
@@ -382,11 +382,27 @@ const Home = () => {
     }
   };
 
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setBackgroundUrl(imageUrl);
+  const handleImageUpload = async (event) => {
+    // const imageUrl = URL.createObjectURL(file);
+    // setBackgroundUrl(imageUrl);
+
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const { data } = await apiRequest.post('/setting/upload-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log('Upload thành công:', data);
+      // Nếu muốn lấy link file từ server trả về:
+      setBackgroundUrl(`/${data.filename}`);
+    } catch (error) {
+      console.error('Lỗi khi upload file:', error);
     }
   };
 
@@ -396,9 +412,9 @@ const Home = () => {
         className="map"
         style={{
           position: 'relative',
-          // backgroundImage: `url(${backgroundUrl})`,
+          backgroundImage: `url(${backgroundUrl})`,
           // backgroundImage: `url(../../../public/map.jpg)`,
-          backgroundImage: `url(/map.jpg)`,
+          // backgroundImage: `url(/map.jpg)`,
           backgroundSize: 'cover', // Thay vì 'contain', dùng 'cover' để ảnh phủ đầy thẻ mà không bị bóp méo
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -431,7 +447,15 @@ const Home = () => {
             </p>
           </div>
         ))}
-        {forbiddenZonePoints.map((point, index) => (
+        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+          <polygon
+            points={forbiddenZonePoints.map((point) => `${scaleX + point.x * scaleValue},${scaleY + point.y * scaleValue}`).join(' ')}
+            fill="rgba(255, 0, 0, 0.3)" /* màu đỏ nhạt */
+            stroke="red" /* viền */
+            strokeWidth="2"
+          />
+        </svg>
+        {/* {forbiddenZonePoints.map((point, index) => (
           <div
             key={index}
             className="map-item fixed"
@@ -447,38 +471,12 @@ const Home = () => {
               x: {point.x}, y: {point.y}
             </p>
           </div>
-        ))}
+        ))} */}
       </div>
     );
   };
   return (
     <div className="home">
-      <div className="home-top">
-        <div className="home-top-child">
-          <div className="home-title">{showLines ? <span>Hiển thị đường nối</span> : <span>Ẩn đường nối</span>}</div>
-          <div className="home-control">
-            <label className="switch">
-              <input type="checkbox" checked={showLines} onClick={toggleLines} />
-              <span className="slider round"></span>
-            </label>
-          </div>
-        </div>
-        <div className="home-top-child">
-          <div className="home-title">{track ? <span>Định vị realtime</span> : <span>Định vị mặc định</span>}</div>
-          <div className="home-control">
-            <label className="switch">
-              <input
-                type="checkbox"
-                checked={track}
-                onChange={() => {
-                  setTrack(!track);
-                }}
-              />
-              <span className="slider round"></span>
-            </label>
-          </div>
-        </div>
-      </div>
       <div style={{ position: 'relative', zIndex: 10 }}>
         {/* <button style={{ position: 'relative' }}>
           Upload Background
@@ -541,50 +539,78 @@ const Home = () => {
               </div>
             ))}
           </div> */}
-          <div>
-            {!showForm ? (
-              <button className="scale-btn" onClick={() => setShowForm(true)}>
-                Scale anchor
-              </button>
-            ) : (
-              <>
-                <div style={rowStyle}>
-                  <label htmlFor="scaleValue">Giá trị scale:</label>
-                  <input
-                    id="scaleValue"
-                    type="number"
-                    value={scaleValue}
-                    onChange={(e) => setScaleValue(Number(e.target.value))}
-                    style={inputStyle}
-                  />
+          <div className="wrap-all">
+            <div>
+              {!showForm ? (
+                <button className="scale-btn" onClick={() => setShowForm(true)}>
+                  Scale anchor
+                </button>
+              ) : (
+                <>
+                  <div style={rowStyle}>
+                    <label htmlFor="scaleValue">Giá trị scale:</label>
+                    <input
+                      id="scaleValue"
+                      type="number"
+                      value={scaleValue}
+                      onChange={(e) => setScaleValue(Number(e.target.value))}
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div style={rowStyle}>
+                    <label htmlFor="scaleX">Scale X:</label>
+                    <input id="scaleX" type="number" value={scaleX} onChange={(e) => setScaleX(Number(e.target.value))} style={inputStyle} />
+                  </div>
+                  <div style={rowStyle}>
+                    <label htmlFor="scaleY">Scale Y:</label>
+                    <input id="scaleY" type="number" value={scaleY} onChange={(e) => setScaleY(Number(e.target.value))} style={inputStyle} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+                    <button className="scale-btn-child" onClick={() => setShowForm(false)}>
+                      Hủy
+                    </button>
+                    <button className="scale-btn-child" onClick={handleSubmit}>
+                      Lưu
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+            <button className="emergency-btn" onClick={handleEmergency}>
+              Khẩn cấp
+            </button>
+            <p className="title-upload">Tải bản đồ</p>
+            <label className="upload-label">
+              <MdUpload size={30} color="white" />
+              <input type="file" accept="image/*" onChange={handleImageUpload} className="upload-input" />
+            </label>
+            <div className="home-top">
+              <div className="home-top-child">
+                {/* <div className="home-title">{showLines ? <span>Hiển thị đường nối</span> : <span>Ẩn đường nối</span>}</div> */}
+                <div className="home-control">
+                  <label className="switch">
+                    <input type="checkbox" checked={showLines} onClick={toggleLines} />
+                    <span className="slider round"></span>
+                  </label>
                 </div>
-                <div style={rowStyle}>
-                  <label htmlFor="scaleX">Scale X:</label>
-                  <input id="scaleX" type="number" value={scaleX} onChange={(e) => setScaleX(Number(e.target.value))} style={inputStyle} />
+              </div>
+              <div className="home-top-child">
+                {/* <div className="home-title">{track ? <span>Định vị realtime</span> : <span>Định vị mặc định</span>}</div> */}
+                <div className="home-control">
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={track}
+                      onChange={() => {
+                        setTrack(!track);
+                      }}
+                    />
+                    <span className="slider round"></span>
+                  </label>
                 </div>
-                <div style={rowStyle}>
-                  <label htmlFor="scaleY">Scale Y:</label>
-                  <input id="scaleY" type="number" value={scaleY} onChange={(e) => setScaleY(Number(e.target.value))} style={inputStyle} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <button className="scale-btn-child" onClick={handleSubmit}>
-                    Lưu cài đặt
-                  </button>
-                  <button className="scale-btn-child" onClick={() => setShowForm(false)}>
-                    Hủy
-                  </button>
-                </div>
-              </>
-            )}
+              </div>
+            </div>
           </div>
-          <button className="emergency-btn" onClick={handleEmergency}>
-            Khẩn cấp
-          </button>
-          {/* <p className="title-upload">Tải bản đồ</p>
-          <label className="upload-label">
-            <MdUpload size={30} color="white" />
-            <input type="file" accept="image/*" onChange={handleImageUpload} className="upload-input" />
-          </label> */}
         </div>
       </div>
     </div>
