@@ -11,9 +11,9 @@ export const getUserSetting = async (req, res) => {
   try {
     const userSetting = await Setting.findOne({ userId }).lean();
     if (!userSetting) {
-      res.status(400).json({ message: 'UserSetting not found' });
+      return res.status(200).json({});
     }
-    res.status(200).json(userSetting);
+    return res.status(200).json(userSetting);
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: 'Failed to get UserSetting' });

@@ -6,9 +6,14 @@ import io from 'socket.io-client';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import apiRequest from '../../lib/apiRequest';
+import Modal from 'react-modal';
+import { useDispatch } from 'react-redux';
+import * as actions from '../../redux/actions';
+import zIndex from '@mui/material/styles/zIndex';
+
 const socket = io('http://localhost:5000');
 const Home = () => {
-  const [scaleValue, setScaleValue] = useState(0);
+  const [scaleValue, setScaleValue] = useState(1);
   const [scaleX, setScaleX] = useState(0);
   const [scaleY, setScaleY] = useState(0);
 
@@ -26,13 +31,28 @@ const Home = () => {
     fontSize: '0.85rem' // giảm cỡ chữ trong input
   };
 
+  const customStyles = {
+    overlay: {
+      zIndex: 9999 // 🛠 overlay luôn trên hết
+    },
+    content: {
+      top: '50%',
+      left: '50%',
+      right: 'auto',
+      bottom: 'auto',
+      marginRight: '-50%',
+      transform: 'translate(-50%, -50%)',
+      zIndex: 10000
+    }
+  };
+  const [refresh, setRefresh] = useState(false);
   const [data, setData] = useState([]);
   const [dataAnchor, setDataAnchor] = useState([]);
   const [showLines, setShowLines] = useState(false);
   const [userTagData, setUserTagData] = useState([]);
   const [locationValid, setLocationValid] = useState([]);
   const [usersData, setUsersData] = useState([]);
-  // const [forbiddenLocation, setForbiddenLocation] = useState(null);
+  const [forbiddenLocation, setForbiddenLocation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [track, setTrack] = useState(false);
@@ -41,33 +61,93 @@ const Home = () => {
   const prevLocationValidRef = useRef([]);
   const [backgroundUrl, setBackgroundUrl] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [openAnchor, setOpenAnchor] = useState(false);
+  const [locations, setLocations] = useState([]);
+  const [newPoint, setNewPoint] = useState({ x: '', y: '' });
+  const dispatch = useDispatch();
 
-  const forbiddenZonePoints = [
-    { x: 3, y: 0, name: 'P1' },
-    { x: 5, y: 0, name: 'P3' },
-    { x: 5, y: 2, name: 'P4' },
-    { x: 3, y: 2, name: 'P2' }
-  ];
+  const closeModal = () => {
+    setOpenAnchor(false);
+    setLocations([]);
+    setNewPoint({ x: '', y: '' });
+  };
 
-  function isPointInQuadrilateral(point, quad) {
-    if (!point || !quad || quad.length !== 4) {
-      console.warn('Dữ liệu không hợp lệ:', { point, quad });
+  const handleAddPoint = () => {
+    if (newPoint.x && newPoint.y) {
+      setLocations([...locations, { x: Number(newPoint.x), y: Number(newPoint.y) }]);
+      setNewPoint({ x: '', y: '' });
+    }
+  };
+
+  const handleSubmit2 = async (e) => {
+    e.preventDefault();
+    dispatch(actions.controlLoading(true));
+    try {
+      await apiRequest.post('/zone', { locations });
+      setRefresh(!refresh);
+      dispatch(actions.controlLoading(false));
+      toast.success('Set up khu vực cấm thành công!', { position: 'top-center', autoClose: 2000 });
+      closeModal();
+    } catch (error) {
+      if (error.status === 403) {
+        toast.error('Không thể set up khu vực cấm nếu không phải admin', {
+          position: 'top-center',
+          autoClose: 2000
+        });
+      }
+      console.log(error);
+    }
+  };
+
+  // const forbiddenZonePoints = [
+  //   { x: 3, y: 0 },
+  //   { x: 5, y: 0 },
+  //   { x: 5, y: 2 },
+  //   { x: 3, y: 2 }
+  // ];
+
+  // function isPointInQuadrilateral(point, quad) {
+  //   if (!point || !quad || quad.length !== 4) {
+  //     console.warn('Dữ liệu không hợp lệ:', { point, quad });
+  //     return false;
+  //   }
+  //   function crossProduct(a, b, c) {
+  //     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+  //   }
+
+  //   let [A, B, C, D] = quad;
+  //   let { x, y } = point;
+  //   let P = { x, y };
+
+  //   let cross1 = crossProduct(A, B, P) >= 0;
+  //   let cross2 = crossProduct(B, D, P) >= 0;
+  //   let cross3 = crossProduct(D, C, P) >= 0;
+  //   let cross4 = crossProduct(C, A, P) >= 0;
+
+  //   return cross1 === cross2 && cross2 === cross3 && cross3 === cross4;
+  // }
+  function isPointInPolygon(point, polygon) {
+    if (!point || !Array.isArray(polygon) || polygon.length < 3) {
+      console.warn('Dữ liệu không hợp lệ:', { point, polygon });
       return false;
     }
-    function crossProduct(a, b, c) {
-      return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+
+    const { x, y } = point;
+    let inside = false;
+    const n = polygon.length;
+
+    for (let i = 0, j = n - 1; i < n; j = i++) {
+      const xi = polygon[i].x,
+        yi = polygon[i].y;
+      const xj = polygon[j].x,
+        yj = polygon[j].y;
+
+      // Kiểm tra nếu đường thẳng từ điểm tới vô cực cắt cạnh (j-i)
+      const intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+      if (intersect) inside = !inside;
     }
 
-    let [A, B, C, D] = quad;
-    let { x, y } = point;
-    let P = { x, y };
-
-    let cross1 = crossProduct(A, B, P) >= 0;
-    let cross2 = crossProduct(B, D, P) >= 0;
-    let cross3 = crossProduct(D, C, P) >= 0;
-    let cross4 = crossProduct(C, A, P) >= 0;
-
-    return cross1 === cross2 && cross2 === cross3 && cross3 === cross4;
+    return inside;
   }
 
   const toggleLines = () => {
@@ -78,11 +158,13 @@ const Home = () => {
     try {
       const res = await axios.get(`http://localhost:5000/api/device`); // Get all device
       const usersRes = await axios.get(`http://localhost:5000/api/users/tag-user`);
+      const zoneRes = await apiRequest.get('/zone');
       const userSettingRes = await apiRequest.get(`/setting`);
       const setting = userSettingRes.data;
-      setScaleValue(setting.scaleValue);
-      setScaleX(setting.scaleX);
-      setScaleY(setting.scaleY);
+      if (zoneRes?.data?.locations) setForbiddenLocation(zoneRes.data.locations);
+      setScaleValue(setting.scaleValue || 10);
+      setScaleX(setting.scaleX || 0);
+      setScaleY(setting.scaleY || 0);
       setBackgroundUrl(setting.mapImage);
       const devices = res.data.filter((item) => item.location);
       const anchors = devices.filter((item) => item.type === 'Anchor').map((item) => item.location);
@@ -94,8 +176,8 @@ const Home = () => {
         .filter((tag) => tag.macAddress !== undefined)
         .map((tag) => ({
           macAddress: tag.macAddress,
-          locationValid: isPointInQuadrilateral(tag.location, latestAnchorRef.current),
-          forbiddenLocation: isPointInQuadrilateral(tag.location, forbiddenZonePoints)
+          locationValid: isPointInPolygon(tag.location, latestAnchorRef.current),
+          forbiddenLocation: (forbiddenLocation && isPointInPolygon(tag.location, forbiddenLocation)) || false
         }));
       if (JSON.stringify(locationValid) !== JSON.stringify(locationStatus)) {
         setLocationValid(locationStatus);
@@ -112,14 +194,13 @@ const Home = () => {
   };
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [refresh]);
 
   const handleSubmit = async () => {
     const input = { scaleValue, scaleX, scaleY };
     try {
       const settingResponse = await apiRequest.post('/setting', input);
       if (settingResponse?.data) {
-        console.log(settingResponse?.data);
         setScaleValue(settingResponse.data.data.scaleValue);
         setScaleX(settingResponse.data.data.scaleX);
         setScaleY(settingResponse.data.data.scaleY);
@@ -136,7 +217,6 @@ const Home = () => {
       try {
         const userResponse = await axios.post('http://localhost:5000/api/users/get-user-by-mac', { macAddress });
         if (userResponse.data) {
-          console.log(userResponse.data);
           setUserTagData(userResponse.data); // Lưu thông tin user
         }
       } catch (error) {
@@ -149,8 +229,8 @@ const Home = () => {
           .filter((tag) => tag.macAddress !== undefined)
           .map((tag) => ({
             macAddress: tag.macAddress,
-            locationValid: isPointInQuadrilateral(tag.location, latestAnchorRef.current),
-            forbiddenLocation: isPointInQuadrilateral(tag.location, forbiddenZonePoints)
+            locationValid: isPointInPolygon(tag.location, latestAnchorRef.current),
+            forbiddenLocation: (forbiddenLocation && isPointInPolygon(tag.location, forbiddenLocation)) || false
           }));
         if (JSON.stringify(locationValid) !== JSON.stringify(locationStatus)) {
           setLocationValid(locationStatus);
@@ -401,6 +481,7 @@ const Home = () => {
       console.log('Upload thành công:', data);
       // Nếu muốn lấy link file từ server trả về:
       setBackgroundUrl(`/${data.filename}`);
+      setRefresh(!refresh);
     } catch (error) {
       console.error('Lỗi khi upload file:', error);
     }
@@ -447,14 +528,16 @@ const Home = () => {
             </p>
           </div>
         ))}
-        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
-          <polygon
-            points={forbiddenZonePoints.map((point) => `${scaleX + point.x * scaleValue},${scaleY + point.y * scaleValue}`).join(' ')}
-            fill="rgba(255, 0, 0, 0.3)" /* màu đỏ nhạt */
-            stroke="red" /* viền */
-            strokeWidth="2"
-          />
-        </svg>
+        {forbiddenLocation && (
+          <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+            <polygon
+              points={forbiddenLocation.map((point) => `${scaleX + point.x * scaleValue},${scaleY + point.y * scaleValue}`).join(' ')}
+              fill="rgba(255, 0, 0, 0.3)" /* màu đỏ nhạt */
+              stroke="red" /* viền */
+              strokeWidth="2"
+            />
+          </svg>
+        )}
         {/* {forbiddenZonePoints.map((point, index) => (
           <div
             key={index}
@@ -477,6 +560,44 @@ const Home = () => {
   };
   return (
     <div className="home">
+      <Modal isOpen={openAnchor} onRequestClose={closeModal} contentLabel="Update Modal" style={customStyles}>
+        <div className="updateModal">
+          <h1>Setup tọa độ khu vực cấm</h1>
+          <div className="form-update">
+            <span className="close" onClick={closeModal}>
+              X
+            </span>
+            <form onSubmit={handleSubmit2}>
+              <div className="item">
+                <label>Tọa độ</label>
+                <div className="location-inputs">
+                  <input type="number" placeholder="X" value={newPoint.x} onChange={(e) => setNewPoint({ ...newPoint, x: e.target.value })} />
+                  <input type="number" placeholder="Y" value={newPoint.y} onChange={(e) => setNewPoint({ ...newPoint, y: e.target.value })} />
+                  <button className="add-point" type="button" onClick={handleAddPoint}>
+                    Thêm
+                  </button>
+                </div>
+              </div>
+              <div className="item">
+                <label>Danh sách tọa độ khu vực cấm hiện tại</label>
+                <ul className="locations-info">
+                  {forbiddenLocation && forbiddenLocation.map((loc, index) => <li key={index}>{`(${loc.x}, ${loc.y})`}</li>)}
+                </ul>
+              </div>
+              <div className="item">
+                <label>Danh sách tọa độ khu vực cấm điều chỉnh</label>
+                <ul className="locations-info">
+                  {locations.map((loc, index) => (
+                    <li key={index}>{`(${loc.x}, ${loc.y})`}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <button>Gửi</button>
+            </form>
+          </div>
+        </div>
+      </Modal>
       <div style={{ position: 'relative', zIndex: 10 }}>
         {/* <button style={{ position: 'relative' }}>
           Upload Background
@@ -576,9 +697,13 @@ const Home = () => {
                 </>
               )}
             </div>
+            <button className="scale-btn" onClick={() => setOpenAnchor(true)}>
+              Setup vùng cấm
+            </button>
             <button className="emergency-btn" onClick={handleEmergency}>
               Khẩn cấp
             </button>
+
             <p className="title-upload">Tải bản đồ</p>
             <label className="upload-label">
               <MdUpload size={30} color="white" />
@@ -586,7 +711,7 @@ const Home = () => {
             </label>
             <div className="home-top">
               <div className="home-top-child">
-                {/* <div className="home-title">{showLines ? <span>Hiển thị đường nối</span> : <span>Ẩn đường nối</span>}</div> */}
+                <div className="home-title">{showLines ? <span>Hiển thị đường nối</span> : <span>Ẩn đường nối</span>}</div>
                 <div className="home-control">
                   <label className="switch">
                     <input type="checkbox" checked={showLines} onClick={toggleLines} />
@@ -595,7 +720,7 @@ const Home = () => {
                 </div>
               </div>
               <div className="home-top-child">
-                {/* <div className="home-title">{track ? <span>Định vị realtime</span> : <span>Định vị mặc định</span>}</div> */}
+                <div className="home-title">{track ? <span>Realtime</span> : <span>Mặc định</span>}</div>
                 <div className="home-control">
                   <label className="switch">
                     <input

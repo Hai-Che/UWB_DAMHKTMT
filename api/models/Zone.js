@@ -10,6 +10,11 @@ const ZoneSchema = new mongoose.Schema(
     },
     locations: {
       type: Array
+    },
+    userId: {
+      type: mongoose.Types.ObjectId,
+      ref: 'User',
+      default: null
     }
   },
   { timestamps: true }

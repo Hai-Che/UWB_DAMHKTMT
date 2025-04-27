@@ -12,7 +12,8 @@
 }
 
 .home-title {
-  margin-top: 5px;
+  font-size: 8px;
+  // margin-top: 5px;
   // height: 20px;
   display: flex;
   justify-content: center;
@@ -30,7 +31,7 @@
   --slider-height: calc(var(--switch-height) - var(--switch-padding));
   --slider-on: calc(var(--switch-height) - var(--switch-padding));
   .switch {
-    margin: 0px 5px;
+    margin: 0px 15px;
     position: relative;
     display: inline-block;
     width: var(--switch-width);
@@ -111,6 +112,7 @@
   .map-item {
     position: absolute;
     color: black;
+    z-index: 10;
     .map-item-detail {
       padding-left: 10px;
       font-size: 10px;
@@ -118,14 +120,17 @@
     }
     &:hover .map-item-detail {
       display: block;
+      z-index: 99;
     }
     .pin {
       position: absolute;
       transform: translate(-50%, -100%);
       cursor: pointer;
+      z-index: 99;
     }
     &:hover ~ .map-item-detail {
       display: block;
+      z-index: 99;
     }
   }
 
