@@ -89,8 +89,37 @@ const Home = () => {
       toast.success('Set up khu vực cấm thành công!', { position: 'top-center', autoClose: 2000 });
       closeModal();
     } catch (error) {
+      dispatch(actions.controlLoading(false));
+      if (error.status === 400) {
+        toast.error(error.response.data.message, {
+          position: 'top-center',
+          autoClose: 2000,
+          zIndex: 999999
+        });
+      }
       if (error.status === 403) {
         toast.error('Không thể set up khu vực cấm nếu không phải admin', {
+          position: 'top-center',
+          autoClose: 2000
+        });
+      }
+      console.log(error);
+    }
+  };
+
+  const handleDeleteZone = async (e) => {
+    e.preventDefault();
+    dispatch(actions.controlLoading(true));
+    try {
+      await apiRequest.delete('/zone');
+      setForbiddenLocation(null);
+      setRefresh(!refresh);
+      dispatch(actions.controlLoading(false));
+      toast.success('Xóa khu vực cấm thành công!', { position: 'top-center', autoClose: 2000 });
+      closeModal();
+    } catch (error) {
+      if (error.status === 403) {
+        toast.error('Không thể xóa khu vực cấm nếu không phải admin', {
           position: 'top-center',
           autoClose: 2000
         });
@@ -582,6 +611,11 @@ const Home = () => {
                 <label>Danh sách tọa độ khu vực cấm hiện tại</label>
                 <ul className="locations-info">
                   {forbiddenLocation && forbiddenLocation.map((loc, index) => <li key={index}>{`(${loc.x}, ${loc.y})`}</li>)}
+                  <div className="location-inputs">
+                    <button className="delete-zone" type="button" onClick={handleDeleteZone}>
+                      Xóa vùng cấm
+                    </button>
+                  </div>
                 </ul>
               </div>
               <div className="item">
@@ -592,6 +626,13 @@ const Home = () => {
                   ))}
                 </ul>
               </div>
+              {/* <div className="item">
+                <div className="location-inputs">
+                  <button className="delete-zone" type="button" onClick={handleAddPoint}>
+                    Xóa vùng cấm
+                  </button>
+                </div>
+              </div> */}
 
               <button>Gửi</button>
             </form>

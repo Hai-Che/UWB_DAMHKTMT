@@ -97,8 +97,24 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      .add-point {
+        margin-top: 20px;
+        width: 50%;
+        padding: 5px;
+        border-radius: 5px;
+        border: none;
+        background-color: white;
+        color: $dark-color;
+        font-weight: bold;
+        cursor: pointer;
+
+        &:disabled {
+          background-color: #bed9d8;
+          cursor: not-allowed;
+        }
+      }
     }
-    .add-point {
+    .delete-zone {
       margin-top: 10px;
       width: 50%;
       padding: 5px;
@@ -108,6 +124,9 @@
       color: $dark-color;
       font-weight: bold;
       cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
 
       &:disabled {
         background-color: #bed9d8;

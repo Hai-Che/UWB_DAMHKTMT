@@ -53,7 +53,7 @@ function App() {
               <QueryClientProvider client={queryClient}>
                 <ScaleLoader loading={statusLoading} cssOverride={override} color="#36d7b7" />
                 <Outlet />
-                <ToastContainer />
+                <ToastContainer style={{ zIndex: 999999 }} />
               </QueryClientProvider>
             </div>
           </div>

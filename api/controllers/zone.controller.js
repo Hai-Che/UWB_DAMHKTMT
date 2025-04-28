@@ -61,6 +61,7 @@ export const getZoneUser = async (req, res) => {
 export const updateZoneUser = async (req, res) => {
   const userId = req.userId;
   try {
+    if (req.body.locations.length < 3) return res.status(400).json({ message: 'Cần ít nhất 3 điểm để set up!' });
     let zone = await Zone.findOne({ userId });
     if (!zone) {
       zone = new Zone({
@@ -73,6 +74,17 @@ export const updateZoneUser = async (req, res) => {
     zone.locations = req.body.locations;
     await zone.save();
     return res.status(200).json(zone);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Failed to get zone' });
+  }
+};
+
+export const deleteZoneUser = async (req, res) => {
+  const userId = req.userId;
+  try {
+    await Zone.findOneAndDelete({ userId });
+    return res.status(200).json({ message: 'Delete successfully' });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Failed to get zone' });
