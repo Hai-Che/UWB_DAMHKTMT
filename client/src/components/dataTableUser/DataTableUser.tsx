@@ -175,7 +175,7 @@ const DataTableUser = (props: Props) => {
         />
         <Modal isOpen={modalIsOpen} onRequestClose={closeModal} contentLabel="Update Modal" style={customStyles}>
           <div className="updateModal">
-            <h1>Update user</h1>
+            <h1>Cập nhật người dùng</h1>
             {selectedRow && (
               <div className="form-update">
                 <span className="close" onClick={closeModal}>

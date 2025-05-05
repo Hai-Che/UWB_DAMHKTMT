@@ -53,6 +53,7 @@ const Home = () => {
   const [locationValid, setLocationValid] = useState([]);
   const [usersData, setUsersData] = useState([]);
   const [forbiddenLocation, setForbiddenLocation] = useState(null);
+  const forbiddenLocationRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [track, setTrack] = useState(false);
@@ -84,6 +85,7 @@ const Home = () => {
     dispatch(actions.controlLoading(true));
     try {
       await apiRequest.post('/zone', { locations });
+      setForbiddenLocation(locations);
       setRefresh(!refresh);
       dispatch(actions.controlLoading(false));
       toast.success('Set up khu vực cấm thành công!', { position: 'top-center', autoClose: 2000 });
@@ -118,6 +120,7 @@ const Home = () => {
       toast.success('Xóa khu vực cấm thành công!', { position: 'top-center', autoClose: 2000 });
       closeModal();
     } catch (error) {
+      dispatch(actions.controlLoading(false));
       if (error.status === 403) {
         toast.error('Không thể xóa khu vực cấm nếu không phải admin', {
           position: 'top-center',
@@ -135,49 +138,69 @@ const Home = () => {
   //   { x: 3, y: 2 }
   // ];
 
-  // function isPointInQuadrilateral(point, quad) {
-  //   if (!point || !quad || quad.length !== 4) {
-  //     console.warn('Dữ liệu không hợp lệ:', { point, quad });
-  //     return false;
-  //   }
-  //   function crossProduct(a, b, c) {
-  //     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
-  //   }
-
-  //   let [A, B, C, D] = quad;
-  //   let { x, y } = point;
-  //   let P = { x, y };
-
-  //   let cross1 = crossProduct(A, B, P) >= 0;
-  //   let cross2 = crossProduct(B, D, P) >= 0;
-  //   let cross3 = crossProduct(D, C, P) >= 0;
-  //   let cross4 = crossProduct(C, A, P) >= 0;
-
-  //   return cross1 === cross2 && cross2 === cross3 && cross3 === cross4;
-  // }
-  function isPointInPolygon(point, polygon) {
-    if (!point || !Array.isArray(polygon) || polygon.length < 3) {
-      console.warn('Dữ liệu không hợp lệ:', { point, polygon });
+  function isPointInQuadrilateral(point, quad) {
+    console.log(point, quad);
+    if (!point || !quad || quad.length !== 4) {
+      console.warn('Dữ liệu không hợp lệ:', { point, quad });
       return false;
     }
-
-    const { x, y } = point;
-    let inside = false;
-    const n = polygon.length;
-
-    for (let i = 0, j = n - 1; i < n; j = i++) {
-      const xi = polygon[i].x,
-        yi = polygon[i].y;
-      const xj = polygon[j].x,
-        yj = polygon[j].y;
-
-      // Kiểm tra nếu đường thẳng từ điểm tới vô cực cắt cạnh (j-i)
-      const intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-      if (intersect) inside = !inside;
+    function crossProduct(a, b, c) {
+      return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
     }
 
-    return inside;
+    let [A, B, C, D] = quad;
+    let { x, y } = point;
+    let P = { x, y };
+
+    let cross1 = crossProduct(A, B, P) >= 0;
+    let cross2 = crossProduct(B, D, P) >= 0;
+    let cross3 = crossProduct(D, C, P) >= 0;
+    let cross4 = crossProduct(C, A, P) >= 0;
+
+    return cross1 === cross2 && cross2 === cross3 && cross3 === cross4;
   }
+
+  function isPointInQuadrilateralForbidden(point, quad) {
+    if (!point || !quad || quad.length !== 4) return false;
+
+    function crossProduct(a, b, c) {
+      return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+    }
+
+    let [A, B, C, D] = quad;
+    let P = { x: point.x, y: point.y };
+
+    let cross1 = crossProduct(A, B, P) >= 0;
+    let cross2 = crossProduct(B, C, P) >= 0; // B → C
+    let cross3 = crossProduct(C, D, P) >= 0; // C → D
+    let cross4 = crossProduct(D, A, P) >= 0; // D → A
+
+    return cross1 === cross2 && cross2 === cross3 && cross3 === cross4;
+  }
+
+  // function isPointInPolygon(point, polygon) {
+  //   if (!point || !Array.isArray(polygon) || polygon.length < 3) {
+  //     console.warn('Dữ liệu không hợp lệ:', { point, polygon });
+  //     return false;
+  //   }
+
+  //   const { x, y } = point;
+  //   let inside = false;
+  //   const n = polygon.length;
+
+  //   for (let i = 0, j = n - 1; i < n; j = i++) {
+  //     const xi = polygon[i].x,
+  //       yi = polygon[i].y;
+  //     const xj = polygon[j].x,
+  //       yj = polygon[j].y;
+
+  //     // Kiểm tra nếu đường thẳng từ điểm tới vô cực cắt cạnh (j-i)
+  //     const intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+  //     if (intersect) inside = !inside;
+  //   }
+
+  //   return inside;
+  // }
 
   const toggleLines = () => {
     setShowLines((prev) => !prev);
@@ -205,8 +228,9 @@ const Home = () => {
         .filter((tag) => tag.macAddress !== undefined)
         .map((tag) => ({
           macAddress: tag.macAddress,
-          locationValid: isPointInPolygon(tag.location, latestAnchorRef.current),
-          forbiddenLocation: (forbiddenLocation && isPointInPolygon(tag.location, forbiddenLocation)) || false
+          locationValid: isPointInQuadrilateral(tag.location, latestAnchorRef.current),
+          forbiddenLocation: zoneRes?.data?.locations ? isPointInQuadrilateralForbidden(tag.location, zoneRes?.data?.locations) : false
+          // forbiddenLocation: isPointInQuadrilateral(tag.location, forbiddenZonePoints)
         }));
       if (JSON.stringify(locationValid) !== JSON.stringify(locationStatus)) {
         setLocationValid(locationStatus);
@@ -224,6 +248,10 @@ const Home = () => {
   useEffect(() => {
     fetchData();
   }, [refresh]);
+
+  useEffect(() => {
+    forbiddenLocationRef.current = forbiddenLocation;
+  }, [forbiddenLocation]);
 
   const handleSubmit = async () => {
     const input = { scaleValue, scaleX, scaleY };
@@ -254,13 +282,17 @@ const Home = () => {
       setData((prevData) => {
         const updatedData = prevData.map((item) => (item.macAddress === macAddress ? { ...item, location: transferData.location } : item));
         const tags = updatedData.filter((item) => item.type === 'Tag');
+        console.log(forbiddenLocation);
         const locationStatus = tags
           .filter((tag) => tag.macAddress !== undefined)
           .map((tag) => ({
             macAddress: tag.macAddress,
-            locationValid: isPointInPolygon(tag.location, latestAnchorRef.current),
-            forbiddenLocation: (forbiddenLocation && isPointInPolygon(tag.location, forbiddenLocation)) || false
+            locationValid: isPointInQuadrilateral(tag.location, latestAnchorRef.current),
+            // forbiddenLocation: forbiddenLocation ? isPointInQuadrilateralForbidden(tag.location, forbiddenLocation) : false
+            forbiddenLocation: forbiddenLocationRef.current ? isPointInQuadrilateralForbidden(tag.location, forbiddenLocationRef.current) : false
+            // forbiddenLocation: isPointInQuadrilateral(tag.location, forbiddenZonePoints)
           }));
+        // console.log(locationStatus);
         if (JSON.stringify(locationValid) !== JSON.stringify(locationStatus)) {
           setLocationValid(locationStatus);
         }
@@ -289,7 +321,7 @@ const Home = () => {
     });
 
     if (changedItems.length > 0) {
-      console.log('Các phần tử thay đổi:', changedItems);
+      // console.log('Các phần tử thay đổi:', changedItems);
       if (userTagData) {
         const checkAndNotify = async () => {
           for (const user of userTagData) {
@@ -339,6 +371,7 @@ const Home = () => {
 
   useEffect(() => {
     const prevLocationValid = prevLocationValidRef.current;
+    // console.log(prevLocationValid);
     const changedItems = locationValid.filter((newItem) => {
       const oldItem = prevLocationValid.find((item) => item.macAddress === newItem.macAddress);
       return !oldItem || oldItem.forbiddenLocation !== newItem.forbiddenLocation;
@@ -346,7 +379,7 @@ const Home = () => {
 
     if (changedItems.length > 0) {
       if (userTagData) {
-        console.log(userTagData);
+        // console.log(userTagData);
         userTagData.forEach((user) => {
           const status = changedItems.find((item) => item.macAddress === user.deviceId.macAddress);
           if (status && user.username) {
@@ -545,7 +578,7 @@ const Home = () => {
           >
             <MdLocationPin className="pin" style={{ color: item.type === 'Tag' ? 'green' : 'red' }} size={30} />
             {item.userId ? (
-              <p className="map-item-detail">{item.userId.username}</p>
+              <p className="map-item-detail-tag">{item.userId.username}</p>
             ) : (
               <>
                 <p className="map-item-detail">{item.name}</p>

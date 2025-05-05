@@ -85,7 +85,7 @@ const Users = () => {
       setRefresh(!refresh);
       dispatch(actions.controlLoading(false));
 
-      toast.success('User has been added successfully', {
+      toast.success('Thêm người dùng mới thành công', {
         position: 'top-center',
         autoClose: 2000
       });

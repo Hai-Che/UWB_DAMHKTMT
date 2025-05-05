@@ -127,16 +127,16 @@ io.on('connection', (socket) => {
     io.emit('stop_tracking');
     console.log('Dừng tracking!');
   });
-  socket.on('speaker-forbidden', async (data) => {
-    io.emit('play_sound1', { msg: `Cảnh báo ${data.username} vào khu vực cấm`, level: 'urgent' });
-  });
-  socket.on('speaker-checkin', async (data) => {
-    // io.emit('play_sound1', { msg: `${data.message}`, level: 'normal' });
-    io.emit('play_sound1', { msg: `Người dùng ${data.username} đã check in thành công`, level: 'normal' });
-  });
-  socket.on('speaker-checkout', async (data) => {
-    io.emit('play_sound1', { msg: `Người dùng ${data.username} đã check out thành công`, level: 'normal' });
-  });
+  // socket.on('speaker-forbidden', async (data) => {
+  //   io.emit('play_sound1', { msg: `Cảnh báo ${data.username} vào khu vực cấm`, level: 'urgent' });
+  // });
+  // socket.on('speaker-checkin', async (data) => {
+  //   // io.emit('play_sound1', { msg: `${data.message}`, level: 'normal' });
+  //   io.emit('play_sound1', { msg: `Người dùng ${data.username} đã check in thành công`, level: 'normal' });
+  // });
+  // socket.on('speaker-checkout', async (data) => {
+  //   io.emit('play_sound1', { msg: `Người dùng ${data.username} đã check out thành công`, level: 'normal' });
+  // });
   socket.on('disconnect', () => {
     console.log('disconnect');
   });
@@ -211,3 +211,29 @@ app.use((error, req, res, next) => {
 server.listen(process.env.PORT || 5000, '0.0.0.0', () => {
   console.log('Backend server is running!');
 });
+
+function isPointInQuadrilateral(point, quad) {
+  if (!point || !quad || quad.length !== 4) return false;
+
+  function crossProduct(a, b, c) {
+    return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+  }
+
+  let [A, B, C, D] = quad;
+  let P = { x: point.x, y: point.y };
+
+  let cross1 = crossProduct(A, B, P) >= 0;
+  let cross2 = crossProduct(B, C, P) >= 0; // B → C
+  let cross3 = crossProduct(C, D, P) >= 0; // C → D
+  let cross4 = crossProduct(D, A, P) >= 0; // D → A
+
+  return cross1 === cross2 && cross2 === cross3 && cross3 === cross4;
+}
+console.log(
+  isPointInQuadrilateral({ x: 2, y: 2, z: 2 }, [
+    { x: 1, y: 1 },
+    { x: 3, y: 1 },
+    { x: 3, y: 3 },
+    { x: 1, y: 3 }
+  ])
+);

@@ -113,6 +113,16 @@
     position: absolute;
     color: black;
     z-index: 10;
+
+    .map-item-detail-tag {
+      padding-left: 10px;
+      font-size: 10px;
+      // display: none;
+    }
+    &:hover .map-item-detail-tag {
+      display: block;
+      z-index: 99;
+    }
     .map-item-detail {
       padding-left: 10px;
       font-size: 10px;
