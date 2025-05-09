@@ -85,6 +85,7 @@ export const deleteUser = async (req, res) => {
     return res.status(403).json({ message: 'Not authorized' });
   }
   try {
+    await Device.findOneAndUpdate({ userId: _id }, { userId: null }, { new: true });
     await User.findByIdAndDelete({ _id });
     res.status(200).json({ message: 'Delete user successfully' });
   } catch (error) {
